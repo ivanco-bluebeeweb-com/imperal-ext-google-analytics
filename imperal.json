@@ -1,0 +1,657 @@
+{
+  "manifest_schema_version": 3,
+  "sdk_version": "5.9.12",
+  "app_id": "google-analytics-bluebee",
+  "version": "0.1.0",
+  "name": "Google Analytics",
+  "description": "Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
+  "icon": "icon.svg",
+  "actions_explicit": true,
+  "system": false,
+  "capabilities": [
+    "google-analytics:read",
+    "google-analytics:settings"
+  ],
+  "tools": [
+    {
+      "name": "connect_google_analytics",
+      "description": "Connect another Google account to Google Analytics 4.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "oauth.connect"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {},
+        "title": "NoParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "account": {
+            "default": "",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PropertySelection",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.account.connect",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_properties",
+      "description": "List GA4 properties the connected Google account can read.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          }
+        },
+        "title": "AccountParam",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "GA4Property": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "property_id": {
+                "default": "",
+                "title": "Property Id",
+                "type": "string"
+              },
+              "account": {
+                "default": "",
+                "title": "Account",
+                "type": "string"
+              },
+              "selected": {
+                "default": false,
+                "title": "Selected",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "GA4Property",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GA4Property"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GA4PropertyList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "select_property",
+      "description": "Select the GA4 property used by default for this Google account.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "local.preference.update"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "description": "GA4 property ID from list_properties.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "property_id"
+        ],
+        "title": "SelectPropertyParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "account": {
+            "default": "",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PropertySelection",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.property.selected",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_overview",
+      "description": "Read headline GA4 metrics for a selected property and date range.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          }
+        },
+        "title": "OverviewParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "",
+            "title": "End Date",
+            "type": "string"
+          },
+          "active_users": {
+            "default": 0,
+            "title": "Active Users",
+            "type": "integer"
+          },
+          "sessions": {
+            "default": 0,
+            "title": "Sessions",
+            "type": "integer"
+          },
+          "views": {
+            "default": 0,
+            "title": "Views",
+            "type": "integer"
+          },
+          "conversions": {
+            "default": 0,
+            "title": "Conversions",
+            "type": "integer"
+          },
+          "total_revenue": {
+            "default": 0.0,
+            "title": "Total Revenue",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GA4Overview",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    }
+  ],
+  "signals": [],
+  "schedules": [],
+  "required_scopes": [],
+  "icon_size_bytes": 383,
+  "oauth": [
+    {
+      "provider": "google",
+      "collection": "google_analytics_accounts",
+      "scopes": [
+        "openid",
+        "email",
+        "profile",
+        "https://www.googleapis.com/auth/analytics.readonly"
+      ],
+      "has_hook": false
+    }
+  ],
+  "lifecycle": {
+    "on_install": true,
+    "health_check": {
+      "interval_sec": 60
+    }
+  },
+  "lifecycle_hooks": {
+    "on_install": {
+      "signature": "(ctx) -> dict"
+    }
+  },
+  "secrets": [
+    {
+      "name": "google_client_id",
+      "description": "Google OAuth client ID for Google Analytics.",
+      "required": true,
+      "write_mode": "user",
+      "max_bytes": 4096,
+      "scope": "app"
+    },
+    {
+      "name": "google_client_secret",
+      "description": "Google OAuth client secret for Google Analytics.",
+      "required": true,
+      "write_mode": "user",
+      "max_bytes": 4096,
+      "scope": "app"
+    }
+  ],
+  "panels": [
+    {
+      "panel_id": "secrets",
+      "slot": "right",
+      "title": "Secrets",
+      "tree": {},
+      "icon": "KeyRound",
+      "refresh": "manual",
+      "center_overlay": false
+    },
+    {
+      "panel_id": "analytics_nav",
+      "slot": "left",
+      "title": "Google Analytics",
+      "tree": {},
+      "icon": "ChartNoAxesCombined",
+      "refresh": "manual",
+      "center_overlay": false,
+      "default_width": 280,
+      "min_width": 220,
+      "max_width": 400
+    },
+    {
+      "panel_id": "analytics",
+      "slot": "center",
+      "title": "Google Analytics",
+      "tree": {},
+      "icon": "ChartNoAxesCombined",
+      "refresh": "manual",
+      "center_overlay": true
+    }
+  ]
+}
