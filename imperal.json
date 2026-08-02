@@ -579,7 +579,7 @@
   "signals": [],
   "schedules": [],
   "required_scopes": [],
-  "icon_size_bytes": 109832,
+  "icon_size_bytes": 37953,
   "oauth": [
     {
       "provider": "google",
