@@ -2,7 +2,7 @@
 
 Read-only GA4 reporting for Imperal. The MVP connects through Google OAuth, lists the GA4 properties the account can read, stores a local default property, and reads headline Overview metrics through the Google Analytics Admin and Data APIs. It does not change GA4 settings, events, audiences, data, or access.
 
-> **Brand asset note:** `icon.svg` is a neutral development placeholder, not the official Google Analytics logo. Replace it from Google’s official brand-assets source and complete `assets/ATTRIBUTION.md` before release.
+> **Brand asset note:** `icon.svg` embeds the unmodified official Google-hosted product asset and is sourced from Google-hosted product branding; its provenance is recorded in `assets/ATTRIBUTION.md`.
 
 ## Current boundary
 
