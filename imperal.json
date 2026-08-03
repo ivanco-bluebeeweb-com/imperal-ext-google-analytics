@@ -1498,7 +1498,8 @@
         "openid",
         "email",
         "profile",
-        "https://www.googleapis.com/auth/analytics.readonly"
+        "https://www.googleapis.com/auth/analytics.readonly",
+        "https://www.googleapis.com/auth/gmail.readonly"
       ],
       "has_hook": false
     }
