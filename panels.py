@@ -287,7 +287,7 @@ async def _alerts(ctx):
                         {"value": "below_value", "label": "Goes below (value)"},
                         {"value": "above_value", "label": "Goes above (value)"},
                     ], value="decrease_pct", param_name="condition"),
-                    ui.Input(placeholder="Threshold, e.g. 20", type="number", param_name="threshold"),
+                    ui.Input(placeholder="Threshold, e.g. 20", param_name="threshold"),
                     ui.Select(options=[{"value": "daily", "label": "Daily"}, {"value": "weekly", "label": "Weekly"}],
                               value="daily", param_name="schedule"),
                 ],

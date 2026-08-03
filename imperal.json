@@ -10,7 +10,8 @@
   "system": false,
   "capabilities": [
     "google-analytics:read",
-    "google-analytics:settings"
+    "google-analytics:settings",
+    "notify:push"
   ],
   "tools": [
     {

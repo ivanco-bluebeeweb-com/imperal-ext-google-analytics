@@ -10,7 +10,7 @@ ext = Extension(
     display_name="Google Analytics",
     description="Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
     icon="icon.svg",
-    capabilities=["google-analytics:read", "google-analytics:settings"],
+    capabilities=["google-analytics:read", "google-analytics:settings", "notify:push"],
     actions_explicit=True,
 )
 
