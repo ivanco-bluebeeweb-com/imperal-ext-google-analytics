@@ -23,14 +23,13 @@ chat = ChatExtension(
 # The connection is deliberately read-only. Identity scopes prevent a connection
 # record without a usable account label from being treated as ready.
 #
-# gmail.readonly is a platform-resolution workaround, not a feature scope: the
-# web-kernel's OAuth callback resolves the connected account's email via a
-# Gmail-specific profile call for the "google" provider on ANY extension, not
-# just Mail. Without a Gmail scope that call fails and the account is saved
-# with an "unknown" email placeholder -- which this app then correctly refuses
-# to treat as connected. This extension never calls Gmail; it exists purely so
-# the platform's own account-resolution step succeeds. See also: Google Drive
-# Connector hits the identical "unknown"/reconnect_required symptom without it.
+# NOTE: gmail.readonly was tried here as a workaround for the platform's OAuth
+# callback resolving account email via a Gmail-specific call, but it made the
+# symptom worse (zero saved accounts instead of an "unknown"-email one) --
+# gmail.readonly is a Google *restricted* scope requiring app verification /
+# a security assessment, and in an unverified app it appears to break the
+# whole grant rather than just the email lookup. Reverted. The real fix has
+# to happen on the platform side (or via Google app verification), not here.
 ext.oauth(
     "google",
     collection="google_analytics_accounts",
@@ -39,7 +38,6 @@ ext.oauth(
         "email",
         "profile",
         "https://www.googleapis.com/auth/analytics.readonly",
-        "https://www.googleapis.com/auth/gmail.readonly",
     ],
 )
 
