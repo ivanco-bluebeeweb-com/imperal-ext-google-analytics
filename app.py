@@ -23,18 +23,16 @@ chat = ChatExtension(
 # The connection is deliberately read-only. Identity scopes prevent a connection
 # record without a usable account label from being treated as ready.
 #
-# gmail.readonly is a platform-resolution workaround, not a feature scope: the
-# web-kernel's OAuth callback resolves the connected account's email via a
-# Gmail-specific getProfile call for the "google" provider on ANY extension,
-# not just Mail. Confirmed via debug_dump_raw_accounts: with this scope
-# present, the saved record gains an "unread_count" field (Gmail getProfile
-# data), proving the Gmail call itself succeeds -- but email still lands as
-# the "unknown" placeholder, which points at a bug in the platform's email
-# extraction from that response, not in the scope itself. This extension
-# never calls Gmail; the scope exists only so the platform's own
-# account-resolution step has a chance to work. This is an Internal-type
-# Google OAuth client (no test-user/verification requirement), so no Google
-# Cloud Console change is needed for this scope to take effect.
+# gmail.readonly was tried as a workaround for the platform's OAuth callback
+# resolving account email via a Gmail-specific getProfile call for the
+# "google" provider on every extension, not just Mail. Root-caused via
+# debug_dump_raw_accounts: the Gmail call itself succeeds (the saved record
+# gains an unread_count field), but email still lands as the "unknown"
+# placeholder even with the scope granted -- most likely the platform reads
+# a field named "email" out of the Gmail getProfile response, which actually
+# returns the address under "emailAddress". That is a platform bug, not
+# something this app's requested scopes can fix. Reverted: no reason to ask
+# for extra Gmail access that doesn't solve the problem.
 ext.oauth(
     "google",
     collection="google_analytics_accounts",
@@ -43,7 +41,6 @@ ext.oauth(
         "email",
         "profile",
         "https://www.googleapis.com/auth/analytics.readonly",
-        "https://www.googleapis.com/auth/gmail.readonly",
     ],
 )
 

@@ -1156,6 +1156,201 @@
       "owner_chat_tool": "google_analytics"
     },
     {
+      "name": "debug_purge_unresolved_accounts",
+      "description": "TEMPORARY DIAGNOSTIC: permanently delete every stored account record whose email never resolved past the 'unknown' placeholder, so a future reconnect starts clean. Never calls Google; only removes local Imperal records for accounts this app already refuses to treat as usable. Remove this tool once the root cause is fixed upstream.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:resource"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          }
+        },
+        "title": "AccountAction",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "RawAccountRecord": {
+            "description": "One unfiltered account record as stored, for OAuth email-resolution diagnostics.",
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "email": {
+                "default": "",
+                "title": "Email",
+                "type": "string"
+              },
+              "provider": {
+                "default": "",
+                "title": "Provider",
+                "type": "string"
+              },
+              "is_active": {
+                "default": false,
+                "title": "Is Active",
+                "type": "boolean"
+              },
+              "has_access_token": {
+                "default": false,
+                "title": "Has Access Token",
+                "type": "boolean"
+              },
+              "has_refresh_token": {
+                "default": false,
+                "title": "Has Refresh Token",
+                "type": "boolean"
+              },
+              "expires_at": {
+                "default": "",
+                "title": "Expires At",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              },
+              "all_keys": {
+                "default": "",
+                "title": "All Keys",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "RawAccountRecord",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/RawAccountRecord"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "RawAccountDump",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "google-analytics-bluebee.debug_purge_unresolved_accounts",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
       "name": "create_alert_rule",
       "description": "Create a notify-only GA4 alert rule that watches one metric on a schedule.",
       "action_type": "write",
@@ -1691,8 +1886,7 @@
         "openid",
         "email",
         "profile",
-        "https://www.googleapis.com/auth/analytics.readonly",
-        "https://www.googleapis.com/auth/gmail.readonly"
+        "https://www.googleapis.com/auth/analytics.readonly"
       ],
       "has_hook": false
     }

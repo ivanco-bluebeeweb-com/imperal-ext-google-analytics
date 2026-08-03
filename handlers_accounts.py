@@ -113,3 +113,23 @@ async def debug_dump_raw_accounts(ctx, params: AccountAction) -> ActionResult:
         )
     summary = f"{len(rows)} raw account record(s) in store.\n" + "\n".join(lines) if lines else "0 raw account records in store."
     return ActionResult.success(RawAccountDump(items=rows), summary=summary)
+
+
+@chat.function("debug_purge_unresolved_accounts",
+               "TEMPORARY DIAGNOSTIC: permanently delete every stored account record whose email "
+               "never resolved past the 'unknown' placeholder, so a future reconnect starts clean. "
+               "Never calls Google; only removes local Imperal records for accounts this app already "
+               "refuses to treat as usable. Remove this tool once the root cause is fixed upstream.",
+               action_type="destructive", event="google-analytics-bluebee.debug_purge_unresolved_accounts",
+               effects=["delete:resource"], data_model=RawAccountDump)
+async def debug_purge_unresolved_accounts(ctx, params: AccountAction) -> ActionResult:
+    """Delete every locally-stored account doc with an empty/unknown email. Diagnostic-only."""
+    page = await ctx.store.query(ACCOUNTS, limit=100)
+    removed = []
+    for doc in page.data:
+        email = str((doc.data or {}).get("email") or "").lower()
+        if email in {"", "unknown"}:
+            await ctx.store.delete(ACCOUNTS, doc.id)
+            removed.append(RawAccountRecord(id=doc.id, title=email or "(no email)", email=email))
+    return ActionResult.success(RawAccountDump(items=removed),
+                                 summary=f"Removed {len(removed)} unresolved account record(s).")
