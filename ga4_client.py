@@ -62,6 +62,18 @@ async def resolve_account(ctx, email: str = "") -> dict:
     return {"ok": True, "account": docs[0]}
 
 
+async def list_accounts(ctx) -> list:
+    """All usable connected accounts (never the placeholder 'unknown')."""
+    page = await ctx.store.query("google_analytics_accounts", limit=100)
+    return [doc for doc in page.data if str((doc.data or {}).get("email") or "").lower() not in {"", "unknown"}]
+
+
+async def selected_property_id(ctx, email: str) -> str:
+    """The locally-saved default GA4 property for one Google account, if any."""
+    page = await ctx.store.query("google_analytics_selections", where={"email": email.lower()}, limit=1)
+    return str((page.data[0].data or {}).get("property_id") or "") if page.data else ""
+
+
 async def request(ctx, account_doc, method: str, url: str, *, params: dict | None = None, json: dict | None = None) -> dict:
     token = str((account_doc.data or {}).get("access_token") or "")
     if not token:

@@ -1,5 +1,7 @@
 """Read-only chat tools for Google Analytics 4."""
 
+from datetime import datetime, timezone
+
 from imperal_sdk import ActionResult
 
 import ga4_client as ga4
@@ -8,6 +10,7 @@ from models import (AccountParam, GA4Overview, GA4Property, GA4PropertyList, NoP
                     OverviewParams, PropertySelection, SelectPropertyParams)
 
 SELECTIONS = "google_analytics_selections"
+OVERVIEW_CACHE = "google_analytics_overview_cache"
 
 
 def _error(out: dict) -> ActionResult:
@@ -22,6 +25,12 @@ def _success(data, summary: str, refresh=None) -> ActionResult:
 async def _selection(ctx, email: str) -> str:
     page = await ctx.store.query(SELECTIONS, where={"email": email.lower()}, limit=1)
     return str((page.data[0].data or {}).get("property_id") or "") if page.data else ""
+
+
+async def cached_overview(ctx, property_id: str) -> dict | None:
+    """The last successfully loaded overview for one property, if any. Read-only helper for panels."""
+    page = await ctx.store.query(OVERVIEW_CACHE, where={"property_id": property_id}, limit=1)
+    return page.data[0].data if page.data else None
 
 
 @chat.function("connect_google_analytics", "Connect another Google account to Google Analytics 4.",
@@ -111,4 +120,13 @@ async def get_overview(ctx, params: OverviewParams) -> ActionResult:
                            active_users=integer("activeUsers"), sessions=integer("sessions"),
                            views=integer("screenPageViews"), conversions=integer("conversions"),
                            total_revenue=decimal("totalRevenue"))
-    return _success(overview, f"Loaded GA4 overview for {params.start_date} to {params.end_date}.")
+    cache_record = {"property_id": property_id, "start_date": params.start_date, "end_date": params.end_date,
+                    "active_users": overview.active_users, "sessions": overview.sessions, "views": overview.views,
+                    "conversions": overview.conversions, "total_revenue": overview.total_revenue,
+                    "loaded_at": datetime.now(timezone.utc).isoformat()}
+    existing = await ctx.store.query(OVERVIEW_CACHE, where={"property_id": property_id}, limit=1)
+    if existing.data:
+        await ctx.store.update(OVERVIEW_CACHE, existing.data[0].id, cache_record)
+    else:
+        await ctx.store.create(OVERVIEW_CACHE, cache_record)
+    return _success(overview, f"Loaded GA4 overview for {params.start_date} to {params.end_date}.", ["analytics"])

@@ -46,3 +46,50 @@ class GA4Overview(sdl.Entity):
 class PropertySelection(sdl.Entity):
     account: str = ""
     property_id: str = ""
+
+
+class AccountAction(AccountParam):
+    pass
+
+
+class GA4Account(sdl.Entity):
+    account: str = ""
+    connected_at: str = ""
+    property_count: int = 0
+    status: str = ""  # "connected" | "reconnect_required" | "insufficient_access" | "error"
+
+
+class GA4AccountList(sdl.EntityList[GA4Account]):
+    pass
+
+
+ALERT_METRICS = ("active_users", "sessions", "conversions", "total_revenue")
+ALERT_CONDITIONS = ("increase_pct", "decrease_pct", "above_value", "below_value")
+ALERT_SCHEDULES = ("daily", "weekly")
+
+
+class CreateAlertParams(AccountParam):
+    property_id: str = Field(..., description="GA4 property ID this alert watches.")
+    metric: str = Field(..., description="Metric to watch: active_users, sessions, conversions, or total_revenue.")
+    condition: str = Field(..., description="One of increase_pct, decrease_pct, above_value, below_value.")
+    threshold: float = Field(..., description="Percent (0-100) for *_pct conditions, or a raw metric value for *_value conditions.")
+    schedule: str = Field("daily", description="How often to evaluate: daily or weekly.")
+
+
+class AlertIdParams(BaseModel):
+    alert_id: str = Field(..., description="Alert rule ID from list_alert_rules.")
+
+
+class GA4Alert(sdl.Entity):
+    account: str = ""
+    property_id: str = ""
+    metric: str = ""
+    condition: str = ""
+    threshold: float = 0.0
+    schedule: str = ""
+    enabled: bool = True
+    last_triggered_at: str = ""
+
+
+class GA4AlertList(sdl.EntityList[GA4Alert]):
+    pass

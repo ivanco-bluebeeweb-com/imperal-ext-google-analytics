@@ -21,7 +21,8 @@ def test_mvp_has_no_google_analytics_mutation_calls():
 
 def test_connect_and_mvp_screen_sketches_exist():
     sketch = (ROOT / "design" / "component-sketches.md").read_text().lower()
-    for title in ("connect google analytics", "overview", "explore", "realtime", "properties and settings"):
+    for title in ("connect google analytics", "overview", "explore", "realtime", "properties (picker)",
+                  "settings", "alerts"):
         assert title in sketch
 
 
