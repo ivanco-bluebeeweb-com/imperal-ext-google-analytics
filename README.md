@@ -6,15 +6,14 @@ Read-only GA4 reporting for Imperal. The MVP connects through Google OAuth, list
 
 ## Current boundary
 
-- Requests only `analytics.readonly` plus OIDC identity scopes.
-- A `gmail.readonly` workaround was tried and reverted: Imperal's OAuth callback resolves a
-  connected Google account's email via a Gmail-specific profile call for the "google"
-  provider on every extension, not just Mail, and without any Gmail scope that lookup fails
-  and the account is saved with an "unknown" email placeholder. Adding `gmail.readonly` did
-  not fix that — it made the grant fail outright (0 accounts saved instead of 1 with
-  "unknown"), because it's a Google *restricted* scope that needs app verification. Root
-  cause is still open; it needs a platform-side fix or a verified Google app, not a scope
-  change here.
+- Requests only `analytics.readonly` plus OIDC identity scopes, and one platform-resolution
+  scope: `gmail.readonly`. This is present solely because Imperal's OAuth callback resolves a
+  connected Google account's email via a Gmail-specific `getProfile` call for the "google"
+  provider, on every extension, not just Mail. Without any Gmail scope that call fails and
+  the account is saved with an "unknown" email placeholder, which this app then correctly
+  refuses to treat as connected. This extension never calls Gmail; the scope exists only so
+  the platform's own account-resolution step has data to work with. Remove it once the
+  platform resolves account email without requiring a Gmail scope.
 - Does not modify Google Analytics properties, events, audiences, conversions or data.
 - A connected account must later be verified and its accessible GA4 properties loaded before reports are shown.
 
