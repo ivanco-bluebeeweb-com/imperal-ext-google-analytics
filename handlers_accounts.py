@@ -8,7 +8,7 @@ from imperal_sdk import ActionResult
 
 import ga4_client as ga4
 from app import chat
-from models import AccountAction, GA4Account, GA4AccountList
+from models import AccountAction, GA4Account, GA4AccountList, RawAccountDump, RawAccountRecord
 
 ACCOUNTS = "google_analytics_accounts"
 SELECTIONS = "google_analytics_selections"
@@ -79,3 +79,28 @@ async def list_connected_accounts(ctx, params: AccountAction) -> ActionResult:
     docs = await ga4.list_accounts(ctx)
     accounts = [await live_status(ctx, doc) for doc in docs]
     return ActionResult.success(GA4AccountList(items=accounts), summary=f"{len(accounts)} connected Google account(s).")
+
+
+@chat.function("debug_dump_raw_accounts",
+               "TEMPORARY DIAGNOSTIC: dump the raw, unfiltered account records saved by the OAuth "
+               "callback, including ones this app normally hides (empty/unknown email). Read-only; "
+               "never calls Google. Remove once the OAuth email-resolution issue is understood.",
+               action_type="read", data_model=RawAccountDump)
+async def debug_dump_raw_accounts(ctx, params: AccountAction) -> ActionResult:
+    """Read every raw account doc as stored, bypassing the usable-email filter, for diagnosis."""
+    page = await ctx.store.query(ACCOUNTS, limit=100)
+    rows = []
+    for doc in page.data:
+        data = doc.data or {}
+        rows.append(RawAccountRecord(
+            id=doc.id, title=str(data.get("email") or "(no email)"),
+            email=str(data.get("email") or ""),
+            provider=str(data.get("provider") or ""),
+            is_active=bool(data.get("is_active")),
+            has_access_token=bool(data.get("access_token")),
+            has_refresh_token=bool(data.get("refresh_token")),
+            expires_at=str(data.get("expires_at") or ""),
+            created_at=str(data.get("created_at") or data.get("connected_at") or ""),
+            all_keys=", ".join(sorted(data.keys())),
+        ))
+    return ActionResult.success(RawAccountDump(items=rows), summary=f"{len(rows)} raw account record(s) in store.")

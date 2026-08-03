@@ -63,6 +63,22 @@ class GA4AccountList(sdl.EntityList[GA4Account]):
     pass
 
 
+class RawAccountRecord(sdl.Entity):
+    """One unfiltered account record as stored, for OAuth email-resolution diagnostics."""
+    email: str = ""
+    provider: str = ""
+    is_active: bool = False
+    has_access_token: bool = False
+    has_refresh_token: bool = False
+    expires_at: str = ""
+    created_at: str = ""
+    all_keys: str = ""
+
+
+class RawAccountDump(sdl.EntityList[RawAccountRecord]):
+    pass
+
+
 ALERT_METRICS = ("active_users", "sessions", "conversions", "total_revenue")
 ALERT_CONDITIONS = ("increase_pct", "decrease_pct", "above_value", "below_value")
 ALERT_SCHEDULES = ("daily", "weekly")
