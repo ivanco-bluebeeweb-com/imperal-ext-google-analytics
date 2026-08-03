@@ -90,9 +90,10 @@ async def debug_dump_raw_accounts(ctx, params: AccountAction) -> ActionResult:
     """Read every raw account doc as stored, bypassing the usable-email filter, for diagnosis."""
     page = await ctx.store.query(ACCOUNTS, limit=100)
     rows = []
+    lines = []
     for doc in page.data:
         data = doc.data or {}
-        rows.append(RawAccountRecord(
+        rec = RawAccountRecord(
             id=doc.id, title=str(data.get("email") or "(no email)"),
             email=str(data.get("email") or ""),
             provider=str(data.get("provider") or ""),
@@ -102,5 +103,13 @@ async def debug_dump_raw_accounts(ctx, params: AccountAction) -> ActionResult:
             expires_at=str(data.get("expires_at") or ""),
             created_at=str(data.get("created_at") or data.get("connected_at") or ""),
             all_keys=", ".join(sorted(data.keys())),
-        ))
-    return ActionResult.success(RawAccountDump(items=rows), summary=f"{len(rows)} raw account record(s) in store.")
+        )
+        rows.append(rec)
+        lines.append(
+            f"doc={doc.id} email={rec.email!r} provider={rec.provider!r} "
+            f"is_active={rec.is_active} has_access_token={rec.has_access_token} "
+            f"has_refresh_token={rec.has_refresh_token} expires_at={rec.expires_at!r} "
+            f"created_at={rec.created_at!r} all_keys=[{rec.all_keys}]"
+        )
+    summary = f"{len(rows)} raw account record(s) in store.\n" + "\n".join(lines) if lines else "0 raw account records in store."
+    return ActionResult.success(RawAccountDump(items=rows), summary=summary)
