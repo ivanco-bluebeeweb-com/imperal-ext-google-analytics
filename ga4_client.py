@@ -50,22 +50,42 @@ def _error(status: int, body) -> dict:
     return fail("RESPONSE_UNEXPECTED" if status < 500 else "UNREACHABLE")
 
 
-async def resolve_account(ctx, email: str = "") -> dict:
-    page = await ctx.store.query("google_analytics_accounts", limit=100)
-    docs = [doc for doc in page.data if str((doc.data or {}).get("email") or "").lower() not in {"", "unknown"}]
-    if email:
-        docs = [doc for doc in docs if str((doc.data or {}).get("email") or "").lower() == email.lower()]
-    if not docs:
-        return fail("ACCOUNT_MISSING")
-    if len(docs) > 1:
-        return fail("ACCOUNT_AMBIGUOUS")
-    return {"ok": True, "account": docs[0]}
+ACCOUNTS_COLLECTION = "google_analytics_accounts"
 
 
 async def list_accounts(ctx) -> list:
     """All usable connected accounts (never the placeholder 'unknown')."""
-    page = await ctx.store.query("google_analytics_accounts", limit=100)
+    page = await ctx.store.query(ACCOUNTS_COLLECTION, limit=100)
     return [doc for doc in page.data if str((doc.data or {}).get("email") or "").lower() not in {"", "unknown"}]
+
+
+async def active_account(ctx):
+    """The account marked is_active, or the first usable one if none is marked yet.
+
+    Mirrors the Google Search Console connector's _active_account: with several
+    connected Google accounts, exactly one is "active" at a time and every read
+    that omits `account` uses it — instead of erroring ACCOUNT_AMBIGUOUS the
+    moment a second account is connected.
+    """
+    docs = await list_accounts(ctx)
+    if not docs:
+        return None
+    return next((doc for doc in docs if bool((doc.data or {}).get("is_active"))), docs[0])
+
+
+async def resolve_account(ctx, email: str = "") -> dict:
+    """Resolve one usable connected account: by email if given, else the active one."""
+    if email:
+        page = await ctx.store.query(ACCOUNTS_COLLECTION, limit=100)
+        docs = [doc for doc in page.data if str((doc.data or {}).get("email") or "").lower() == email.lower()]
+        if not docs:
+            return fail("ACCOUNT_MISSING")
+        return {"ok": True, "account": docs[0]}
+    doc = await active_account(ctx)
+    if doc is None:
+        return fail("ACCOUNT_MISSING")
+    return {"ok": True, "account": doc}
+
 
 
 async def selected_property_id(ctx, email: str) -> str:

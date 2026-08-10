@@ -8,7 +8,7 @@ from imperal_sdk import ActionResult
 
 import ga4_client as ga4
 from app import chat
-from models import AccountAction, GA4Account, GA4AccountList, RawAccountDump, RawAccountRecord
+from models import AccountAction, AccountSwitched, GA4Account, GA4AccountList, RawAccountDump, RawAccountRecord
 
 ACCOUNTS = "google_analytics_accounts"
 SELECTIONS = "google_analytics_selections"
@@ -19,17 +19,18 @@ async def live_status(ctx, doc) -> GA4Account:
     """Check one connected account against Google right now. Never fabricates a status."""
     email = str((doc.data or {}).get("email") or "")
     connected_at = str((doc.data or {}).get("created_at") or (doc.data or {}).get("connected_at") or "")
+    is_active = bool((doc.data or {}).get("is_active"))
     out = await ga4.properties(ctx, doc)
     if not out.get("ok"):
         code = out.get("code") or ""
         status = "reconnect_required" if code == "TOKEN_REJECTED" else (
             "insufficient_access" if code == "PERMISSION_DENIED" else "error")
         return GA4Account(id=email, title=email, account=email, connected_at=connected_at,
-                          property_count=0, status=status)
+                          property_count=0, status=status, is_active=is_active)
     count = len(out.get("properties") or [])
     status = "connected" if count > 0 else "insufficient_access"
     return GA4Account(id=email, title=email, account=email, connected_at=connected_at,
-                      property_count=count, status=status)
+                      property_count=count, status=status, is_active=is_active)
 
 
 @chat.function("check_account_access", "Check whether a connected Google account can currently read Google Analytics data.",
@@ -79,6 +80,26 @@ async def list_connected_accounts(ctx, params: AccountAction) -> ActionResult:
     docs = await ga4.list_accounts(ctx)
     accounts = [await live_status(ctx, doc) for doc in docs]
     return ActionResult.success(GA4AccountList(items=accounts), summary=f"{len(accounts)} connected Google account(s).")
+
+
+@chat.function("switch_account", "Change the active Google account. Subsequent property and report lookups use this "
+               "account until switched again. Use for: switch google account, use my other analytics account.",
+               action_type="write", effects=["update:account"],
+               event="google-analytics-bluebee.account.switched", data_model=AccountSwitched)
+async def switch_account(ctx, params: AccountAction) -> ActionResult:
+    """Mark one connected account active and every other connected account inactive."""
+    resolved = await ga4.resolve_account(ctx, params.account)
+    if not resolved.get("ok"):
+        return ActionResult.error(resolved.get("error") or "That Google account is not connected.",
+                                  retryable=False, code=resolved.get("code") or "ACCOUNT_MISSING")
+    target = resolved["account"]
+    for doc in await ga4.list_accounts(ctx):
+        new_active = doc.id == target.id
+        if bool((doc.data or {}).get("is_active")) != new_active:
+            await ctx.store.update(ACCOUNTS, doc.id, {**(doc.data or {}), "is_active": new_active})
+    email = str((target.data or {}).get("email") or "")
+    return ActionResult.success(AccountSwitched(id=email, title=email, active=email),
+                                summary=f"Switched to {email}.", refresh_panels=["analytics"])
 
 
 @chat.function("debug_dump_raw_accounts",

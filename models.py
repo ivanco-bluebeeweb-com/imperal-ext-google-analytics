@@ -57,10 +57,15 @@ class GA4Account(sdl.Entity):
     connected_at: str = ""
     property_count: int = 0
     status: str = ""  # "connected" | "reconnect_required" | "insufficient_access" | "error"
+    is_active: bool = False
 
 
 class GA4AccountList(sdl.EntityList[GA4Account]):
     pass
+
+
+class AccountSwitched(sdl.Entity):
+    active: str = ""
 
 
 class RawAccountRecord(sdl.Entity):

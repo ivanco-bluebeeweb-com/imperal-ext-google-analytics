@@ -672,6 +672,11 @@
             "default": 0,
             "title": "Property Count",
             "type": "integer"
+          },
+          "is_active": {
+            "default": false,
+            "title": "Is Active",
+            "type": "boolean"
           }
         },
         "required": [
@@ -786,6 +791,11 @@
             "default": 0,
             "title": "Property Count",
             "type": "integer"
+          },
+          "is_active": {
+            "default": false,
+            "title": "Is Active",
+            "type": "boolean"
           }
         },
         "required": [
@@ -900,6 +910,11 @@
                 "default": 0,
                 "title": "Property Count",
                 "type": "integer"
+              },
+              "is_active": {
+                "default": false,
+                "title": "Is Active",
+                "type": "boolean"
               }
             },
             "required": [
@@ -957,6 +972,117 @@
         "x-sdl": "entity-list"
       },
       "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "switch_account",
+      "description": "Change the active Google account. Subsequent property and report lookups use this account until switched again. Use for: switch google account, use my other analytics account.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "update:account"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          }
+        },
+        "title": "AccountAction",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "active": {
+            "default": "",
+            "title": "Active",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "AccountSwitched",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.account.switched",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -1936,7 +2062,7 @@
       "title": "Google Analytics",
       "tree": {},
       "icon": "ChartNoAxesCombined",
-      "refresh": "manual",
+      "refresh": "on_event:google-analytics-bluebee.account.connect,google-analytics-bluebee.account.switched,google-analytics-bluebee.account.disconnected",
       "center_overlay": false,
       "default_width": 280,
       "min_width": 220,

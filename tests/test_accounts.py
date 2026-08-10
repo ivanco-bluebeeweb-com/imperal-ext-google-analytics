@@ -25,6 +25,14 @@ def test_connected_when_properties_reachable(monkeypatch):
     assert account.status == "connected"
     assert account.property_count == 2
     assert account.account == "user@example.com"
+    assert account.is_active is False
+
+
+def test_live_status_reports_is_active_true(monkeypatch):
+    _patch_properties(monkeypatch, {"ok": True, "properties": [{"property_id": "1"}]})
+    doc = SimpleNamespace(id="acc1", data={"email": "user@example.com", "created_at": "", "is_active": True})
+    account = asyncio.run(live_status(SimpleNamespace(), doc))
+    assert account.is_active is True
 
 
 def test_insufficient_access_when_zero_properties(monkeypatch):

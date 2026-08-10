@@ -61,9 +61,27 @@ async def _connect(ctx):
 
 
 @ext.panel("analytics_nav", slot="left", title="Google Analytics", icon="ChartNoAxesCombined",
-           default_width=280, min_width=220, max_width=400)
+           default_width=280, min_width=220, max_width=400,
+           refresh="on_event:google-analytics-bluebee.account.connect,google-analytics-bluebee.account.switched,google-analytics-bluebee.account.disconnected")
 async def analytics_nav(ctx, **kwargs):
-    return ui.Stack(children=[
+    accounts_page = await ctx.store.query("google_analytics_accounts", limit=100)
+    usable = [doc for doc in accounts_page.data if str((doc.data or {}).get("email") or "").lower() not in {"", "unknown"}]
+    account_items = []
+    for doc in usable:
+        email = str((doc.data or {}).get("email") or "")
+        is_active = bool((doc.data or {}).get("is_active"))
+        account_items.append(ui.ListItem(
+            id=email, title=email,
+            subtitle="✓ Active" if is_active else "Click to switch",
+            avatar=ui.Avatar(fallback=email[0].upper() if email else "?", size="sm"),
+            badge=ui.Badge("✓", color="green") if is_active else None,
+            on_click=None if is_active else ui.Call("switch_account", account=email),
+            actions=[{"label": "Disconnect", "icon": "Unplug",
+                      "on_click": ui.Call("disconnect_google_account", account=email),
+                      "confirm": f"Disconnect {email}? Saved property selection and alert rules for it are removed. "
+                                 "Google's own OAuth grant is not revoked."}],
+        ))
+    children = [
         ui.List(items=[
             ui.ListItem(id="overview", title="Overview", icon="LayoutDashboard",
                         on_click=ui.Call("__panel__analytics", view="overview")),
@@ -80,9 +98,15 @@ async def analytics_nav(ctx, **kwargs):
             ui.ListItem(id="settings", title="Settings", icon="Settings",
                         on_click=ui.Call("__panel__analytics", view="settings")),
         ]),
-        ui.Button("Connect Google account", icon="Plus", variant="ghost",
-                  on_click=ui.Call("__panel__analytics", view="connect")),
-    ])
+    ]
+    if usable:
+        children.append(ui.Divider())
+        children.append(ui.Text(f"Accounts ({len(usable)})", variant="caption"))
+        children.append(ui.List(items=account_items))
+    children.append(ui.Button("Connect Google account" if not usable else "Add another Google account",
+                              icon="Plus", variant="ghost",
+                              on_click=ui.Call("__panel__analytics", view="connect")))
+    return ui.Stack(children=children)
 
 
 @ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True)
@@ -216,20 +240,26 @@ async def _settings(ctx):
     rows = []
     for doc in usable:
         account = await live_status(ctx, doc)
+        subtitle = f"{account.property_count} propert{'y' if account.property_count == 1 else 'ies'}"
+        if account.connected_at:
+            subtitle += f" · connected {account.connected_at}"
+        subtitle += " · Active" if account.is_active else " · Inactive"
+        actions = [
+            {"label": "Check access", "icon": "RefreshCw",
+             "on_click": ui.Call("check_account_access", account=account.account)},
+        ]
+        if not account.is_active:
+            actions.append({"label": "Switch to this account", "icon": "ArrowLeftRight",
+                            "on_click": ui.Call("switch_account", account=account.account)})
+        actions.append({"label": "Reconnect", "icon": "LogIn",
+                        "on_click": ui.Call("__panel__analytics", view="connect")})
+        actions.append({"label": "Disconnect", "icon": "Unplug",
+                        "on_click": ui.Call("disconnect_google_account", account=account.account),
+                        "confirm": f"Disconnect {account.account}? Saved property selection and alert rules for it are removed. Google's own OAuth grant is not revoked."})
         rows.append(ui.ListItem(
-            id=account.account, title=account.account,
-            subtitle=f"{account.property_count} propert{'y' if account.property_count == 1 else 'ies'}"
-                     + (f" · connected {account.connected_at}" if account.connected_at else ""),
+            id=account.account, title=account.account, subtitle=subtitle,
             badge=ui.Badge(_STATUS_LABEL.get(account.status, account.status), color=_STATUS_COLOR.get(account.status, "gray")),
-            actions=[
-                {"label": "Check access", "icon": "RefreshCw",
-                 "on_click": ui.Call("check_account_access", account=account.account)},
-                {"label": "Reconnect", "icon": "LogIn",
-                 "on_click": ui.Call("__panel__analytics", view="connect")},
-                {"label": "Disconnect", "icon": "Unplug",
-                 "on_click": ui.Call("disconnect_google_account", account=account.account),
-                 "confirm": f"Disconnect {account.account}? Saved property selection and alert rules for it are removed. Google's own OAuth grant is not revoked."},
-            ],
+            actions=actions,
         ))
     return ui.Page(title="Settings", subtitle="Connected Google accounts", children=[
         ui.Card(title="Read-only connection", content=ui.Text(
