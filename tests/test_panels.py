@@ -1,6 +1,7 @@
 """Regression coverage for the property-first Google Analytics panel flow."""
 
 import asyncio
+import inspect
 from types import SimpleNamespace
 
 import panels
@@ -47,7 +48,21 @@ def test_empty_center_has_only_connect_action():
     node = asyncio.run(panels.analytics(_Ctx()))
     rendered = _text(node)
     assert "Connect Google Account" in rendered
-    assert "Select a GA4 property" not in rendered
+    assert "Choose the GA4 property" not in rendered
+
+
+def test_connected_account_without_property_explains_left_panel_selection(monkeypatch):
+    async def no_selection(ctx):
+        return {}
+
+    monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection)
+    node = asyncio.run(panels.analytics(_Ctx([_doc("account-1", email="owner@example.com", is_active=True)])))
+    assert "Choose the GA4 property to display in the left panel." in _text(node)
+
+
+def test_center_refreshes_when_an_account_connects():
+    source = inspect.getsource(panels)
+    assert 'refresh="on_event:google-analytics-bluebee.account.connect' in source
 
 
 def test_sidebar_property_selector_queries_only_the_active_account(monkeypatch):

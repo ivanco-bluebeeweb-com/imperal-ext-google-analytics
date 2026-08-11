@@ -163,7 +163,8 @@ async def analytics_nav(ctx, view="", **kwargs):
     return sidebar
 
 
-@ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True)
+@ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True,
+           refresh="on_event:google-analytics-bluebee.account.connect,google-analytics-bluebee.account.switched,google-analytics-bluebee.account.disconnected,google-analytics-bluebee.property.selected")
 async def analytics(ctx, view="overview", property_id="", report="channels", period="", **kwargs):
     accounts = await _accounts(ctx)
     if view == "connect":
@@ -191,7 +192,9 @@ async def analytics(ctx, view="overview", property_id="", report="channels", per
     if view == "settings":
         return await _settings(ctx)
     if not property_id:
-        return ui.Page(title="Google Analytics", children=[ui.Empty("Select a GA4 property in the sidebar to load reporting.")])
+        return ui.Page(title="Google Analytics", children=[
+            ui.Empty("Choose the GA4 property to display in the left panel.")
+        ])
     if view == "overview":
         period = period or await selected_overview_period(ctx, property_id)
         return await _overview(ctx, property_id, period)

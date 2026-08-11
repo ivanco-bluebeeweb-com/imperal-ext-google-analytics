@@ -10043,7 +10043,7 @@
       "title": "Google Analytics",
       "tree": {},
       "icon": "ChartNoAxesCombined",
-      "refresh": "manual",
+      "refresh": "on_event:google-analytics-bluebee.account.connect,google-analytics-bluebee.account.switched,google-analytics-bluebee.account.disconnected,google-analytics-bluebee.property.selected",
       "center_overlay": true
     }
   ]
