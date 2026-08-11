@@ -92,6 +92,29 @@ def test_switch_account_marks_target_active_and_others_inactive():
     assert ctx.store._docs["b"].data["is_active"] is True
 
 
+def test_switch_account_clears_prior_current_property_context():
+    accounts = [_doc("a", "one@example.com", is_active=True), _doc("b", "two@example.com", is_active=False)]
+    selection = SimpleNamespace(id="selection", data={
+        "email": "one@example.com", "property_id": "111", "is_current": True,
+    })
+    ctx = _ctx([*accounts, selection])
+    # This fixture uses one store for the compact test double; the production
+    # code queries distinct collections, so expose only selection rows there.
+    original_query = ctx.store.query
+
+    async def query(collection, where=None, limit=100):
+        if collection == "google_analytics_selections":
+            docs = [ctx.store._docs["selection"]]
+            return _Page(docs)
+        return await original_query(collection, where=where, limit=limit)
+
+    ctx.store.query = query
+    result = asyncio.run(switch_account(ctx, AccountAction(account="two@example.com")))
+
+    assert result.status == "success"
+    assert ctx.store._docs["selection"].data["is_current"] is False
+
+
 def test_switch_account_errors_when_account_not_connected():
     ctx = _ctx([_doc("a", "one@example.com", is_active=True)])
     result = asyncio.run(switch_account(ctx, AccountAction(account="missing@example.com")))

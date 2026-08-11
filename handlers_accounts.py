@@ -97,9 +97,18 @@ async def switch_account(ctx, params: AccountAction) -> ActionResult:
         new_active = doc.id == target.id
         if bool((doc.data or {}).get("is_active")) != new_active:
             await ctx.store.update(ACCOUNTS, doc.id, {**(doc.data or {}), "is_active": new_active})
+    # Account switch changes the entire reporting context.  Clear the prior
+    # current-property marker so the refreshed sidebar requires a property
+    # belonging to the newly active account, never a stale property from the
+    # account that was just left.
+    for selection in (await ctx.store.query(SELECTIONS, limit=100)).data:
+        data = selection.data or {}
+        if data.get("is_current"):
+            await ctx.store.update(SELECTIONS, selection.id, {**data, "is_current": False})
     email = str((target.data or {}).get("email") or "")
     return ActionResult.success(AccountSwitched(id=email, title=email, active=email),
-                                summary=f"Switched to {email}.", refresh_panels=["analytics", "analytics_nav"])
+                                summary=f"Switched to {email}. Select one of this account's GA4 properties.",
+                                refresh_panels=["analytics", "analytics_nav"])
 
 
 @chat.function("debug_dump_raw_accounts",
