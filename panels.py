@@ -80,17 +80,23 @@ async def _connect(ctx):
     ])
 
 
-async def _property_options(ctx, accounts):
-    options = []
-    for doc in accounts:
-        email = str((doc.data or {}).get("email") or "")
-        out = await ga4.properties(ctx, doc)
-        if not out.get("ok"):
-            continue
-        for row in out.get("properties") or []:
-            title = str(row.get("title") or row["property_id"])
-            options.append({"value": row["property_id"], "label": f"{title} · {email}"})
-    return options
+async def _property_options(ctx, account):
+    """Return only the GA4 properties accessible to the selected account."""
+    out = await ga4.properties(ctx, account)
+    if not out.get("ok"):
+        return []
+    return [
+        {"value": row["property_id"], "label": str(row.get("title") or row["property_id"])}
+        for row in out.get("properties") or []
+    ]
+
+
+def _account_options(accounts):
+    return [
+        {"value": str((doc.data or {}).get("email") or ""),
+         "label": str((doc.data or {}).get("email") or "")}
+        for doc in accounts
+    ]
 
 
 @ext.panel("analytics_nav", slot="left", title="Google Analytics", icon="ChartNoAxesCombined",
@@ -101,35 +107,33 @@ async def analytics_nav(ctx, view="", **kwargs):
     if not accounts:
         return ui.Stack(children=[_connect_button()])
 
+    active = await ga4.active_account(ctx)
+    active_email = str((active.data or {}).get("email") or "") if active else ""
     selection = await ga4.global_selected_property(ctx)
-    property_id = selection.get("property_id", "")
-    account_items = []
-    for doc in accounts:
-        email = str((doc.data or {}).get("email") or "")
-        active = bool((doc.data or {}).get("is_active"))
-        account_items.append(ui.ListItem(
-            id=email, title=email, subtitle="Active" if active else "Click to switch",
-            avatar=ui.Avatar(fallback=email[:1].upper() or "?", size="sm"),
-            badge=ui.Badge("Active", color="green") if active else None,
-            on_click=None if active else ui.Call("switch_account", account=email),
-        ))
+    # A property only remains selected when it belongs to the active account.
+    property_id = selection.get("property_id", "") if selection.get("email", "").lower() == active_email.lower() else ""
 
     children = [
-        ui.List(items=account_items),
+        ui.Text("Google account", variant="caption"),
+        ui.Select(
+            options=_account_options(accounts), value=active_email,
+            placeholder="Select a connected Google account", param_name="account",
+            on_change=ui.Call("switch_account", account="{{value}}"),
+        ),
         ui.Button("Add another Google account", icon="Plus", variant="ghost", full_width=True,
                   on_click=ui.Call("__panel__analytics", view="connect")),
         ui.Divider(),
         ui.Text("GA4 property", variant="caption"),
     ]
-    options = await _property_options(ctx, accounts)
+    options = await _property_options(ctx, active) if active else []
     if options:
         children.append(ui.Select(
             options=options, value=property_id, placeholder="Select a GA4 property",
             param_name="property_id",
-            on_change=ui.Call("select_property", account="", property_id="{{value}}"),
+            on_change=ui.Call("select_property", account=active_email, property_id="{{value}}"),
         ))
     else:
-        children.append(ui.Text("No accessible GA4 properties found.", variant="caption"))
+        children.append(ui.Text("No accessible GA4 properties found for this account.", variant="caption"))
 
     if property_id:
         menu = [
@@ -157,13 +161,23 @@ async def analytics(ctx, view="overview", property_id="", report="channels", **k
     if not accounts:
         return ui.Page(title="Google Analytics", children=[_connect_button()])
 
+    active = await ga4.active_account(ctx)
+    active_email = str((active.data or {}).get("email") or "") if active else ""
     selected = await ga4.global_selected_property(ctx)
-    property_id = property_id or selected.get("property_id", "")
-    if property_id and property_id != selected.get("property_id"):
+    selected_for_active_account = (
+        selected.get("property_id", "")
+        if selected.get("email", "").lower() == active_email.lower()
+        else ""
+    )
+    property_id = property_id or selected_for_active_account
+    if property_id and property_id != selected_for_active_account:
         owner = await ga4.account_for_property(ctx, property_id)
         if owner:
             email = str((owner.data or {}).get("email") or "")
             await _persist_property_selection(ctx, email, property_id)
+            selected_for_active_account = property_id if email.lower() == active_email.lower() else ""
+            if not selected_for_active_account:
+                property_id = ""
     if view == "settings":
         return await _settings(ctx)
     if not property_id:

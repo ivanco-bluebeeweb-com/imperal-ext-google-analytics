@@ -50,18 +50,31 @@ def test_empty_center_has_only_connect_action():
     assert "Select a GA4 property" not in rendered
 
 
-def test_connected_sidebar_shows_accounts_and_property_selector_before_menu(monkeypatch):
+def test_sidebar_property_selector_queries_only_the_active_account(monkeypatch):
+    calls = []
+
     async def fake_properties(ctx, doc):
-        return {"ok": True, "properties": [{"property_id": "123", "title": "Example site"}]}
+        calls.append(doc.id)
+        property_id = "123" if doc.id == "account-1" else "456"
+        title = "Active property" if doc.id == "account-1" else "Other-account property"
+        return {"ok": True, "properties": [{"property_id": property_id, "title": title}]}
 
     async def no_selection(ctx):
         return {}
 
+    accounts = [
+        _doc("account-1", email="owner@example.com", is_active=True),
+        _doc("account-2", email="other@example.com", is_active=False),
+    ]
     monkeypatch.setattr(panels.ga4, "properties", fake_properties)
     monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection)
-    node = asyncio.run(panels.analytics_nav(_Ctx([_doc("account-1", email="owner@example.com", is_active=True)])))
+    node = asyncio.run(panels.analytics_nav(_Ctx(accounts)))
     rendered = _text(node)
+    assert calls == ["account-1"]
     assert "owner@example.com" in rendered
+    assert "other@example.com" in rendered
+    assert "Active property" in rendered
+    assert "Other-account property" not in rendered
     assert "Add another Google account" in rendered
     assert "GA4 property" in rendered
     assert "Select a GA4 property" in rendered
