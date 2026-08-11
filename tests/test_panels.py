@@ -65,6 +65,21 @@ def test_center_refreshes_when_an_account_connects():
     assert 'refresh="on_event:google-analytics-bluebee.account.connect' in source
 
 
+def test_center_ignores_stale_property_parameter_after_account_switch(monkeypatch):
+    async def no_selection_for_new_active_account(ctx):
+        return {"property_id": "111", "email": "one@example.com"}
+
+    monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection_for_new_active_account)
+    node = asyncio.run(panels.analytics(
+        _Ctx([_doc("account-2", email="two@example.com", is_active=True)]),
+        property_id="111",
+    ))
+    rendered = _text(node)
+
+    assert "Choose the GA4 property to display in the left panel." in rendered
+    assert "Overview ·" not in rendered
+
+
 def test_sidebar_property_selector_queries_only_the_active_account(monkeypatch):
     calls = []
 

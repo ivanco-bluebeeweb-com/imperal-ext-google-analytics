@@ -97,18 +97,26 @@ async def switch_account(ctx, params: AccountAction) -> ActionResult:
         new_active = doc.id == target.id
         if bool((doc.data or {}).get("is_active")) != new_active:
             await ctx.store.update(ACCOUNTS, doc.id, {**(doc.data or {}), "is_active": new_active})
-    # Account switch changes the entire reporting context.  Clear the prior
-    # current-property marker so the refreshed sidebar requires a property
-    # belonging to the newly active account, never a stale property from the
-    # account that was just left.
+    # Account switching changes the reporting context. Restore the target
+    # account's own last selected property, when it has one; otherwise leave
+    # no current property and let the refreshed center render its start state.
+    # Never carry a property from the account just left into the new context.
+    email = str((target.data or {}).get("email") or "")
+    has_saved_property = False
     for selection in (await ctx.store.query(SELECTIONS, limit=100)).data:
         data = selection.data or {}
-        if data.get("is_current"):
-            await ctx.store.update(SELECTIONS, selection.id, {**data, "is_current": False})
-    email = str((target.data or {}).get("email") or "")
+        belongs_to_target = str(data.get("email") or "").lower() == email.lower()
+        selected = belongs_to_target and bool(data.get("property_id"))
+        has_saved_property = has_saved_property or selected
+        if bool(data.get("is_current")) != selected:
+            await ctx.store.update(SELECTIONS, selection.id, {**data, "is_current": selected})
+    summary = (
+        f"Switched to {email}. Restored this account's last selected GA4 property."
+        if has_saved_property else
+        f"Switched to {email}. Select one of this account's GA4 properties."
+    )
     return ActionResult.success(AccountSwitched(id=email, title=email, active=email),
-                                summary=f"Switched to {email}. Select one of this account's GA4 properties.",
-                                refresh_panels=["analytics", "analytics_nav"])
+                                summary=summary, refresh_panels=["analytics", "analytics_nav"])
 
 
 @chat.function("debug_dump_raw_accounts",

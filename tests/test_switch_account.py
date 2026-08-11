@@ -115,6 +115,54 @@ def test_switch_account_clears_prior_current_property_context():
     assert ctx.store._docs["selection"].data["is_current"] is False
 
 
+def test_switch_account_restores_target_accounts_last_property_context():
+    accounts = [_doc("a", "one@example.com", is_active=True), _doc("b", "two@example.com", is_active=False)]
+    first_selection = SimpleNamespace(id="first-selection", data={
+        "email": "one@example.com", "property_id": "111", "is_current": True,
+    })
+    target_selection = SimpleNamespace(id="target-selection", data={
+        "email": "two@example.com", "property_id": "222", "is_current": False,
+    })
+    ctx = _ctx([*accounts, first_selection, target_selection])
+    original_query = ctx.store.query
+
+    async def query(collection, where=None, limit=100):
+        if collection == "google_analytics_selections":
+            return _Page([ctx.store._docs["first-selection"], ctx.store._docs["target-selection"]])
+        return await original_query(collection, where=where, limit=limit)
+
+    ctx.store.query = query
+    result = asyncio.run(switch_account(ctx, AccountAction(account="two@example.com")))
+
+    assert result.status == "success"
+    assert "Restored this account's last selected GA4 property" in result.summary
+    assert ctx.store._docs["first-selection"].data["is_current"] is False
+    assert ctx.store._docs["target-selection"].data["is_current"] is True
+    assert result.refresh_panels == ["analytics", "analytics_nav"]
+
+
+def test_switch_account_without_saved_property_leaves_clean_start_state():
+    accounts = [_doc("a", "one@example.com", is_active=True), _doc("b", "two@example.com", is_active=False)]
+    selection = SimpleNamespace(id="selection", data={
+        "email": "one@example.com", "property_id": "111", "is_current": True,
+    })
+    ctx = _ctx([*accounts, selection])
+    original_query = ctx.store.query
+
+    async def query(collection, where=None, limit=100):
+        if collection == "google_analytics_selections":
+            return _Page([ctx.store._docs["selection"]])
+        return await original_query(collection, where=where, limit=limit)
+
+    ctx.store.query = query
+    result = asyncio.run(switch_account(ctx, AccountAction(account="two@example.com")))
+
+    assert result.status == "success"
+    assert result.summary == "Switched to two@example.com. Select one of this account's GA4 properties."
+    assert ctx.store._docs["selection"].data["is_current"] is False
+    assert result.refresh_panels == ["analytics", "analytics_nav"]
+
+
 def test_switch_account_errors_when_account_not_connected():
     ctx = _ctx([_doc("a", "one@example.com", is_active=True)])
     result = asyncio.run(switch_account(ctx, AccountAction(account="missing@example.com")))

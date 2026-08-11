@@ -33,7 +33,9 @@ can now be stale:
 
 - **Account connected, disconnected, or switched:** refresh both the sidebar and
   the central reporting panel, because account choices and all report content may
-  have changed.
+  have changed. On account switch, restore that account's own last selected
+  property; if it has none, the center must show the clean property-selection
+  start state and must never retain a property parameter from the account left.
 - **Property selected:** refresh both surfaces, because the selected property is
   the global reporting context.
 - **Period selected or report loaded:** refresh the central reporting panel; also

@@ -190,15 +190,10 @@ async def analytics(ctx, view="overview", property_id="", report="channels", per
         if selected.get("email", "").lower() == active_email.lower()
         else ""
     )
-    property_id = property_id or selected_for_active_account
-    if property_id and property_id != selected_for_active_account:
-        owner = await ga4.account_for_property(ctx, property_id)
-        if owner:
-            email = str((owner.data or {}).get("email") or "")
-            await _persist_property_selection(ctx, email, property_id)
-            selected_for_active_account = property_id if email.lower() == active_email.lower() else ""
-            if not selected_for_active_account:
-                property_id = ""
+    # The refreshed center can retain parameters from the previously rendered
+    # account. The active account's persisted selection is the only trusted
+    # reporting context; never let a stale property_id revive or overwrite it.
+    property_id = selected_for_active_account
     if view == "settings":
         return await _settings(ctx)
     if not property_id:
