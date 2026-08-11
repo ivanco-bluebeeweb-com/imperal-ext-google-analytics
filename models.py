@@ -18,8 +18,14 @@ class SelectPropertyParams(AccountParam):
 
 class OverviewParams(AccountParam):
     property_id: str = Field("", description="GA4 property ID; omit to use the selected property.")
-    start_date: str = Field("7daysAgo", description="GA4 start date, e.g. 7daysAgo or 2026-08-01.")
-    end_date: str = Field("yesterday", description="GA4 end date, e.g. yesterday or 2026-08-02.")
+    start_date: str = Field("30daysAgo", description="GA4 start date, e.g. 30daysAgo or 2026-08-01.")
+    end_date: str = Field("yesterday", description="GA4 end date, e.g. today, yesterday or 2026-08-02.")
+    period: str = Field("30days", description="Named period used by the panel, or custom for explicit dates.")
+
+
+class OverviewPeriodParams(AccountParam):
+    property_id: str = Field("", description="GA4 property ID; omit to use the selected property.")
+    period: str = Field("30days", description="today, yesterday, 7days, 15days, 30days, 90days, 6months, 12months, or this_month.")
 
 
 class GA4Property(sdl.Entity):

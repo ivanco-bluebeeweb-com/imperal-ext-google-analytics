@@ -416,6 +416,162 @@
       "owner_chat_tool": "google_analytics"
     },
     {
+      "name": "load_overview_period",
+      "description": "Load GA4 overview for a named period: today, yesterday, 7/15/30/90 days, 6/12 months, or this month.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "period": {
+            "default": "30days",
+            "description": "today, yesterday, 7days, 15days, 30days, 90days, 6months, 12months, or this_month.",
+            "title": "Period",
+            "type": "string"
+          }
+        },
+        "title": "OverviewPeriodParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "",
+            "title": "End Date",
+            "type": "string"
+          },
+          "active_users": {
+            "default": 0,
+            "title": "Active Users",
+            "type": "integer"
+          },
+          "sessions": {
+            "default": 0,
+            "title": "Sessions",
+            "type": "integer"
+          },
+          "views": {
+            "default": 0,
+            "title": "Views",
+            "type": "integer"
+          },
+          "conversions": {
+            "default": 0,
+            "title": "Conversions",
+            "type": "integer"
+          },
+          "total_revenue": {
+            "default": 0.0,
+            "title": "Total Revenue",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GA4Overview",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
       "name": "get_overview",
       "description": "Read headline GA4 metrics for a selected property and date range.",
       "action_type": "read",
@@ -437,15 +593,21 @@
             "type": "string"
           },
           "start_date": {
-            "default": "7daysAgo",
-            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "default": "30daysAgo",
+            "description": "GA4 start date, e.g. 30daysAgo or 2026-08-01.",
             "title": "Start Date",
             "type": "string"
           },
           "end_date": {
             "default": "yesterday",
-            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "description": "GA4 end date, e.g. today, yesterday or 2026-08-02.",
             "title": "End Date",
+            "type": "string"
+          },
+          "period": {
+            "default": "30days",
+            "description": "Named period used by the panel, or custom for explicit dates.",
+            "title": "Period",
             "type": "string"
           }
         },

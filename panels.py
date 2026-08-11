@@ -154,7 +154,7 @@ async def analytics_nav(ctx, view="", **kwargs):
 
 
 @ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True)
-async def analytics(ctx, view="overview", property_id="", report="channels", **kwargs):
+async def analytics(ctx, view="overview", property_id="", report="channels", period="30days", **kwargs):
     accounts = await _accounts(ctx)
     if view == "connect":
         return await _connect(ctx)
@@ -183,7 +183,7 @@ async def analytics(ctx, view="overview", property_id="", report="channels", **k
     if not property_id:
         return ui.Page(title="Google Analytics", children=[ui.Empty("Select a GA4 property in the sidebar to load reporting.")])
     if view == "overview":
-        return await _overview(ctx, property_id)
+        return await _overview(ctx, property_id, period)
     if view == "explore":
         return _explore(property_id)
     if view == "realtime":
@@ -211,14 +211,32 @@ async def _persist_property_selection(ctx, email, property_id):
         await ctx.store.create("google_analytics_selections", record)
 
 
-async def _overview(ctx, property_id):
-    cached = await cached_overview(ctx, property_id)
-    children = [ui.Button("Load last 7 days", icon="RefreshCw",
-                          on_click=ui.Call("get_overview", property_id=property_id,
-                                           start_date="7daysAgo", end_date="yesterday"))]
+_OVERVIEW_PERIODS = {
+    "today": {"label": "Today", "start_date": "today", "end_date": "today"},
+    "yesterday": {"label": "Yesterday", "start_date": "yesterday", "end_date": "yesterday"},
+    "7days": {"label": "Last 7 days", "start_date": "7daysAgo", "end_date": "yesterday"},
+    "15days": {"label": "Last 15 days", "start_date": "15daysAgo", "end_date": "yesterday"},
+    "30days": {"label": "Last 30 days", "start_date": "30daysAgo", "end_date": "yesterday"},
+    "90days": {"label": "Last 90 days", "start_date": "90daysAgo", "end_date": "yesterday"},
+    "6months": {"label": "Last 6 months", "start_date": "180daysAgo", "end_date": "yesterday"},
+    "12months": {"label": "Last 12 months", "start_date": "365daysAgo", "end_date": "yesterday"},
+    "this_month": {"label": "This month", "start_date": "firstDayOfMonth", "end_date": "today"},
+}
+
+
+async def _overview(ctx, property_id, period="30days"):
+    period = period if period in _OVERVIEW_PERIODS else "30days"
+    dates = _OVERVIEW_PERIODS[period]
+    cached = await cached_overview(ctx, property_id, dates["start_date"], dates["end_date"])
+    selector = ui.Select(
+        options=[{"value": value, "label": item["label"]} for value, item in _OVERVIEW_PERIODS.items()],
+        value=period, param_name="period", placeholder="Show results for",
+        on_change=ui.Call("__panel__analytics", view="overview", property_id=property_id, period="{{value}}"),
+    )
+    children = [ui.Text("Show results for", variant="caption"), selector]
     if cached:
         children += [
-            ui.Text(f"Updated {cached.get('loaded_at', '')} · {cached.get('start_date')} to {cached.get('end_date')}", variant="caption"),
+            ui.Text(f"Updated {cached.get('loaded_at', '')} · {dates['label']}", variant="caption"),
             ui.Stats(columns=3, children=[
                 ui.Stat(label="Active users", value=cached.get("active_users", 0), icon="Users"),
                 ui.Stat(label="Sessions", value=cached.get("sessions", 0), icon="ChartNoAxesCombined"),
@@ -228,8 +246,11 @@ async def _overview(ctx, property_id):
             ]),
         ]
     else:
-        children.append(ui.Empty("No overview loaded yet. Load the last 7 days to fetch real GA4 data."))
-    return ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
+        children.append(ui.Empty(f"Loading {dates['label'].lower()}…"))
+    page = ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
+    if not cached:
+        page.props["auto_action"] = ui.Call("load_overview_period", property_id=property_id, period=period)
+    return page
 
 
 def _explore(property_id):

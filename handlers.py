@@ -7,7 +7,7 @@ from imperal_sdk import ActionResult
 import ga4_client as ga4
 from app import chat
 from models import (AccountParam, GA4Overview, GA4Property, GA4PropertyList, NoParams,
-                    OverviewParams, PropertySelection, SelectPropertyParams)
+                    OverviewParams, OverviewPeriodParams, PropertySelection, SelectPropertyParams)
 
 SELECTIONS = "google_analytics_selections"
 OVERVIEW_CACHE = "google_analytics_overview_cache"
@@ -27,9 +27,11 @@ async def _selection(ctx, email: str) -> str:
     return str((page.data[0].data or {}).get("property_id") or "") if page.data else ""
 
 
-async def cached_overview(ctx, property_id: str) -> dict | None:
-    """The last successfully loaded overview for one property, if any. Read-only helper for panels."""
-    page = await ctx.store.query(OVERVIEW_CACHE, where={"property_id": property_id}, limit=1)
+async def cached_overview(ctx, property_id: str, start_date: str = "30daysAgo", end_date: str = "yesterday") -> dict | None:
+    """The last successfully loaded overview for one property and exact GA4 date range."""
+    page = await ctx.store.query(OVERVIEW_CACHE,
+                                 where={"property_id": property_id, "start_date": start_date, "end_date": end_date},
+                                 limit=1)
     return page.data[0].data if page.data else None
 
 
@@ -108,6 +110,30 @@ async def select_property(ctx, params: SelectPropertyParams) -> ActionResult:
                     ["analytics", "analytics_nav"])
 
 
+_OVERVIEW_PERIODS = {
+    "today": ("today", "today"),
+    "yesterday": ("yesterday", "yesterday"),
+    "7days": ("7daysAgo", "yesterday"),
+    "15days": ("15daysAgo", "yesterday"),
+    "30days": ("30daysAgo", "yesterday"),
+    "90days": ("90daysAgo", "yesterday"),
+    "6months": ("180daysAgo", "yesterday"),
+    "12months": ("365daysAgo", "yesterday"),
+    "this_month": ("firstDayOfMonth", "today"),
+}
+
+
+@chat.function("load_overview_period", "Load GA4 overview for a named period: today, yesterday, 7/15/30/90 days, 6/12 months, or this month.",
+               action_type="read", data_model=GA4Overview)
+async def load_overview_period(ctx, params: OverviewPeriodParams) -> ActionResult:
+    """Translate a panel period choice to GA4 dates, then run the live overview."""
+    dates = _OVERVIEW_PERIODS.get(params.period)
+    if not dates:
+        return ActionResult.error("Choose a supported reporting period.", retryable=False, code="VALIDATION_FAILED")
+    return await get_overview(ctx, OverviewParams(account=params.account, property_id=params.property_id,
+                                                  start_date=dates[0], end_date=dates[1], period=params.period))
+
+
 @chat.function("get_overview", "Read headline GA4 metrics for a selected property and date range.",
                action_type="read", data_model=GA4Overview)
 async def get_overview(ctx, params: OverviewParams) -> ActionResult:
@@ -141,7 +167,11 @@ async def get_overview(ctx, params: OverviewParams) -> ActionResult:
                     "active_users": overview.active_users, "sessions": overview.sessions, "views": overview.views,
                     "conversions": overview.conversions, "total_revenue": overview.total_revenue,
                     "loaded_at": datetime.now(timezone.utc).isoformat()}
-    existing = await ctx.store.query(OVERVIEW_CACHE, where={"property_id": property_id}, limit=1)
+    existing = await ctx.store.query(
+        OVERVIEW_CACHE,
+        where={"property_id": property_id, "start_date": params.start_date, "end_date": params.end_date},
+        limit=1,
+    )
     if existing.data:
         await ctx.store.update(OVERVIEW_CACHE, existing.data[0].id, cache_record)
     else:
