@@ -70,10 +70,19 @@ async def list_properties(ctx, params: AccountParam) -> ActionResult:
                event="google-analytics-bluebee.property.selected", data_model=PropertySelection)
 async def select_property(ctx, params: SelectPropertyParams) -> ActionResult:
     """Persist a local default after verifying property access with Google."""
-    resolved = await ga4.resolve_account(ctx, params.account)
-    if not resolved.get("ok"):
-        return _error(resolved)
-    doc = resolved["account"]
+    # The sidebar uses one property dropdown across every connected account.
+    # Resolve its owner first when the UI only supplies property_id; chat calls
+    # that explicitly pass account keep their existing deterministic behavior.
+    if params.account:
+        resolved = await ga4.resolve_account(ctx, params.account)
+        if not resolved.get("ok"):
+            return _error(resolved)
+        doc = resolved["account"]
+    else:
+        doc = await ga4.account_for_property(ctx, params.property_id)
+        if doc is None:
+            return ActionResult.error("That GA4 property is not available to a connected Google account.",
+                                      retryable=False, code="GA4_PROPERTY_NOT_FOUND")
     email = str((doc.data or {}).get("email") or "").lower()
     properties = await ga4.properties(ctx, doc)
     if not properties.get("ok"):
@@ -81,14 +90,22 @@ async def select_property(ctx, params: SelectPropertyParams) -> ActionResult:
     if params.property_id not in {row["property_id"] for row in properties["properties"]}:
         return ActionResult.error("That GA4 property is not available to this Google account.", retryable=False,
                                   code="GA4_PROPERTY_NOT_FOUND")
+    # Keep the existing per-account default for chat calls, and mark this
+    # selection as the one current property context for the panel's global
+    # sidebar dropdown. Exactly one record may carry is_current=True.
+    for existing in (await ctx.store.query(SELECTIONS, limit=100)).data:
+        data = existing.data or {}
+        if data.get("is_current") and str(data.get("email") or "").lower() != email:
+            await ctx.store.update(SELECTIONS, existing.id, {**data, "is_current": False})
     old = await ctx.store.query(SELECTIONS, where={"email": email}, limit=1)
-    record = {"email": email, "property_id": params.property_id}
+    record = {"email": email, "property_id": params.property_id, "is_current": True}
     if old.data:
         await ctx.store.update(SELECTIONS, old.data[0].id, record)
     else:
         await ctx.store.create(SELECTIONS, record)
     return _success(PropertySelection(id=params.property_id, title=params.property_id, account=email,
-                                      property_id=params.property_id), "GA4 property selected.", ["analytics"])
+                                      property_id=params.property_id), "GA4 property selected.",
+                    ["analytics", "analytics_nav"])
 
 
 @chat.function("get_overview", "Read headline GA4 metrics for a selected property and date range.",

@@ -70,7 +70,7 @@ async def disconnect_google_account(ctx, params: AccountAction) -> ActionResult:
         await ctx.store.delete(ALERTS, row.id)
     return ActionResult.success(GA4Account(id=email, title=email, account=email, status="disconnected"),
                                 summary=f"Disconnected {email}. Reconnect any time — your Google account and GA4 data are unchanged.",
-                                refresh_panels=["analytics"])
+                                refresh_panels=["analytics", "analytics_nav"])
 
 
 @chat.function("list_connected_accounts", "List every Google account connected to Google Analytics, with live access status.",
@@ -99,7 +99,7 @@ async def switch_account(ctx, params: AccountAction) -> ActionResult:
             await ctx.store.update(ACCOUNTS, doc.id, {**(doc.data or {}), "is_active": new_active})
     email = str((target.data or {}).get("email") or "")
     return ActionResult.success(AccountSwitched(id=email, title=email, active=email),
-                                summary=f"Switched to {email}.", refresh_panels=["analytics"])
+                                summary=f"Switched to {email}.", refresh_panels=["analytics", "analytics_nav"])
 
 
 @chat.function("debug_dump_raw_accounts",

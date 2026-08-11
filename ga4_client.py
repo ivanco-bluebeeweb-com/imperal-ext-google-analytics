@@ -94,6 +94,42 @@ async def selected_property_id(ctx, email: str) -> str:
     return str((page.data[0].data or {}).get("property_id") or "") if page.data else ""
 
 
+async def global_selected_property(ctx) -> dict:
+    """The one globally-selected property across every connected account, if any.
+
+    The sidebar's property Select is a single flat dropdown regardless of which
+    connected Google account owns the property, so the saved selection carries
+    both the property_id and the owning account's email -- callers that need a
+    specific account for further API calls read it from here instead of the
+    active_account fallback that per-account selections use.
+    """
+    page = await ctx.store.query("google_analytics_selections", limit=100)
+    fallback = {}
+    for doc in page.data:
+        data = doc.data or {}
+        if not data.get("property_id"):
+            continue
+        selection = {"property_id": str(data["property_id"]), "email": str(data.get("email") or "")}
+        if data.get("is_current"):
+            return selection
+        fallback = fallback or selection
+    return fallback
+
+
+async def account_for_property(ctx, property_id: str):
+    """Find which connected account's accountSummaries includes this property_id.
+
+    Used when the sidebar's single property Select spans every connected
+    account: once a property_id is chosen, the report/detail screens need
+    the actual account_doc to call Google with, not just an email guess.
+    """
+    for doc in await list_accounts(ctx):
+        out = await properties(ctx, doc)
+        if out.get("ok") and any(row["property_id"] == property_id for row in out.get("properties") or []):
+            return doc
+    return None
+
+
 async def request(ctx, account_doc, method: str, url: str, *, params: dict | None = None, json: dict | None = None) -> dict:
     token = str((account_doc.data or {}).get("access_token") or "")
     if not token:

@@ -26,6 +26,14 @@ property settings, and data streams.
   every call is explicit.
 - A connected account must later be verified and its accessible GA4 properties loaded before reports are shown.
 
+## Panel flow
+
+- With no usable Google account, both the sidebar and main area offer only **Connect Google Account**.
+- Once connected, the sidebar shows the account list, **Add another Google account**, then one GA4 property selector spanning every connected account.
+- Report navigation appears only after a property is selected. Every visible section is backed by a live handler: Overview, Explore, Real-time, Site reports and Alerts.
+- **Settings** stays as a separate secondary button at the bottom of the sidebar for account management.
+- The property selector records the owning Google account, so selecting a property from a non-active account still routes reports to the right account.
+
 ## Part D: what the OWNER must do before write functions actually work
 
 Code alone cannot make Part D work. Three things are outside this app's
