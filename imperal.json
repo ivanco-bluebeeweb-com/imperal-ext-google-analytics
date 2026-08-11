@@ -2,7 +2,7 @@
   "manifest_schema_version": 3,
   "sdk_version": "5.9.13",
   "app_id": "google-analytics-bluebee",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "name": "Google Analytics",
   "description": "Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
   "icon": "icon.svg",
@@ -1477,6 +1477,1576 @@
       "owner_chat_tool": "google_analytics"
     },
     {
+      "name": "list_ga_accounts",
+      "description": "List the Google Analytics accounts (not properties) the connected Google account can see.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          }
+        },
+        "title": "AccountParam",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "GaAccountEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "account_id": {
+                "default": "",
+                "title": "Account Id",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "GaAccountEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GaAccountEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GaAccountList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_account_summary",
+      "description": "Read the full tree of Google Analytics accounts and their GA4 properties in one call.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          }
+        },
+        "title": "AccountParam",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "AccountSummaryEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "account_id": {
+                "default": "",
+                "title": "Account Id",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/AccountSummaryProperty"
+                },
+                "default": [],
+                "title": "Properties"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "AccountSummaryEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          },
+          "AccountSummaryProperty": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "property_id": {
+                "default": "",
+                "title": "Property Id",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "AccountSummaryProperty",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/AccountSummaryEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AccountSummaryList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_property_details",
+      "description": "Read a GA4 property's own settings: timezone, currency, industry, creation date.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "time_zone": {
+            "default": "",
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "currency_code": {
+            "default": "",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "industry_category": {
+            "default": "",
+            "title": "Industry Category",
+            "type": "string"
+          },
+          "create_time": {
+            "default": "",
+            "title": "Create Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PropertyDetail",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_data_streams",
+      "description": "List the web/iOS/Android data streams feeding a GA4 property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "DataStreamEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "stream_id": {
+                "default": "",
+                "title": "Stream Id",
+                "type": "string"
+              },
+              "stream_type": {
+                "default": "",
+                "title": "Stream Type",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              },
+              "measurement_id": {
+                "default": "",
+                "title": "Measurement Id",
+                "type": "string"
+              },
+              "default_uri": {
+                "default": "",
+                "title": "Default Uri",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "DataStreamEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/DataStreamEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DataStreamList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_data_stream_details",
+      "description": "Read one GA4 data stream's Measurement ID and settings.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "stream_id": {
+            "description": "Data stream ID from list_data_streams.",
+            "title": "Stream Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stream_id"
+        ],
+        "title": "DataStreamDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "stream_id": {
+            "default": "",
+            "title": "Stream Id",
+            "type": "string"
+          },
+          "stream_type": {
+            "default": "",
+            "title": "Stream Type",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "measurement_id": {
+            "default": "",
+            "title": "Measurement Id",
+            "type": "string"
+          },
+          "default_uri": {
+            "default": "",
+            "title": "Default Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "DataStreamEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_custom_dimensions",
+      "description": "List custom dimensions registered on a GA4 property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "CustomDimensionEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "default": "",
+                "title": "Description",
+                "type": "string"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "parameter_name": {
+                "default": "",
+                "title": "Parameter Name",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              },
+              "scope": {
+                "default": "",
+                "title": "Scope",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "CustomDimensionEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/CustomDimensionEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CustomDimensionList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_custom_metrics",
+      "description": "List custom metrics registered on a GA4 property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "CustomMetricEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "default": "",
+                "title": "Description",
+                "type": "string"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "parameter_name": {
+                "default": "",
+                "title": "Parameter Name",
+                "type": "string"
+              },
+              "display_name": {
+                "default": "",
+                "title": "Display Name",
+                "type": "string"
+              },
+              "measurement_unit": {
+                "default": "",
+                "title": "Measurement Unit",
+                "type": "string"
+              },
+              "scope": {
+                "default": "",
+                "title": "Scope",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "CustomMetricEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/CustomMetricEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CustomMetricList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_key_events",
+      "description": "List which GA4 events are marked as key events (conversions) on a property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "KeyEventEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "event_name": {
+                "default": "",
+                "title": "Event Name",
+                "type": "string"
+              },
+              "custom": {
+                "default": false,
+                "title": "Custom",
+                "type": "boolean"
+              },
+              "counting_method": {
+                "default": "",
+                "title": "Counting Method",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "KeyEventEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/KeyEventEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "KeyEventList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_google_ads_links",
+      "description": "List Google Ads accounts linked to a GA4 property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "PropertyDetailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "GoogleAdsLinkEntity": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "customer_id": {
+                "default": "",
+                "title": "Customer Id",
+                "type": "string"
+              },
+              "can_manage_clients": {
+                "default": false,
+                "title": "Can Manage Clients",
+                "type": "boolean"
+              },
+              "ads_personalization_enabled": {
+                "default": false,
+                "title": "Ads Personalization Enabled",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "GoogleAdsLinkEntity",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GoogleAdsLinkEntity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "GoogleAdsLinkList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
       "name": "create_alert_rule",
       "description": "Create a notify-only GA4 alert rule that watches one metric on a schedule.",
       "action_type": "write",
@@ -1989,6 +3559,4251 @@
         "x-sdl": "entity"
       },
       "event": "google-analytics-bluebee.alert.deleted",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "update_alert_rule",
+      "description": "Change an existing GA4 alert rule's threshold, condition, or schedule without deleting it.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "alert.update"
+      ],
+      "id_projection": "alert_id",
+      "params_schema": {
+        "properties": {
+          "alert_id": {
+            "description": "Alert rule ID from list_alert_rules.",
+            "title": "Alert Id",
+            "type": "string"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New threshold; omit to leave unchanged.",
+            "title": "Threshold"
+          },
+          "schedule": {
+            "default": "",
+            "description": "New schedule (daily/weekly); omit to leave unchanged.",
+            "title": "Schedule",
+            "type": "string"
+          },
+          "condition": {
+            "default": "",
+            "description": "New condition; omit to leave unchanged.",
+            "title": "Condition",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id"
+        ],
+        "title": "UpdateAlertParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "account": {
+            "default": "",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "metric": {
+            "default": "",
+            "title": "Metric",
+            "type": "string"
+          },
+          "condition": {
+            "default": "",
+            "title": "Condition",
+            "type": "string"
+          },
+          "threshold": {
+            "default": 0.0,
+            "title": "Threshold",
+            "type": "number"
+          },
+          "schedule": {
+            "default": "",
+            "title": "Schedule",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "last_triggered_at": {
+            "default": "",
+            "title": "Last Triggered At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GA4Alert",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.alert.updated",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "pause_alert_rule",
+      "description": "Pause a GA4 alert rule without deleting it -- it stops evaluating until resumed.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "alert.pause"
+      ],
+      "id_projection": "alert_id",
+      "params_schema": {
+        "properties": {
+          "alert_id": {
+            "description": "Alert rule ID from list_alert_rules.",
+            "title": "Alert Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id"
+        ],
+        "title": "AlertIdParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "account": {
+            "default": "",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "metric": {
+            "default": "",
+            "title": "Metric",
+            "type": "string"
+          },
+          "condition": {
+            "default": "",
+            "title": "Condition",
+            "type": "string"
+          },
+          "threshold": {
+            "default": 0.0,
+            "title": "Threshold",
+            "type": "number"
+          },
+          "schedule": {
+            "default": "",
+            "title": "Schedule",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "last_triggered_at": {
+            "default": "",
+            "title": "Last Triggered At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GA4Alert",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.alert.paused",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "resume_alert_rule",
+      "description": "Resume a paused GA4 alert rule so it evaluates again on schedule.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "alert.resume"
+      ],
+      "id_projection": "alert_id",
+      "params_schema": {
+        "properties": {
+          "alert_id": {
+            "description": "Alert rule ID from list_alert_rules.",
+            "title": "Alert Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id"
+        ],
+        "title": "AlertIdParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "account": {
+            "default": "",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "metric": {
+            "default": "",
+            "title": "Metric",
+            "type": "string"
+          },
+          "condition": {
+            "default": "",
+            "title": "Condition",
+            "type": "string"
+          },
+          "threshold": {
+            "default": 0.0,
+            "title": "Threshold",
+            "type": "number"
+          },
+          "schedule": {
+            "default": "",
+            "title": "Schedule",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "last_triggered_at": {
+            "default": "",
+            "title": "Last Triggered At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GA4Alert",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.alert.resumed",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "test_alert_rule",
+      "description": "Evaluate a GA4 alert rule against live data right now, without waiting for its schedule.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "alert_id": {
+            "description": "Alert rule ID from list_alert_rules.",
+            "title": "Alert Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id"
+        ],
+        "title": "AlertIdParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "alert_id": {
+            "default": "",
+            "title": "Alert Id",
+            "type": "string"
+          },
+          "would_trigger": {
+            "default": false,
+            "title": "Would Trigger",
+            "type": "boolean"
+          },
+          "current_value": {
+            "default": 0.0,
+            "title": "Current Value",
+            "type": "number"
+          },
+          "previous_value": {
+            "default": 0.0,
+            "title": "Previous Value",
+            "type": "number"
+          },
+          "threshold": {
+            "default": 0.0,
+            "title": "Threshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "TestAlertResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "list_alert_history",
+      "description": "List when a GA4 alert rule has triggered in the past, most recent first.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "alert_id": {
+            "description": "Alert rule ID from list_alert_rules.",
+            "title": "Alert Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id"
+        ],
+        "title": "AlertIdParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "AlertHistoryEntry": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "alert_id": {
+                "default": "",
+                "title": "Alert Id",
+                "type": "string"
+              },
+              "triggered_at": {
+                "default": "",
+                "title": "Triggered At",
+                "type": "string"
+              },
+              "current_value": {
+                "default": 0.0,
+                "title": "Current Value",
+                "type": "number"
+              },
+              "previous_value": {
+                "default": 0.0,
+                "title": "Previous Value",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "AlertHistoryEntry",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/AlertHistoryEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AlertHistoryList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "run_custom_report",
+      "description": "Run a GA4 report with any dimensions and metrics you choose, for a date range.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "run_realtime_report",
+      "description": "Read GA4 realtime data -- active users and events from roughly the last 30 minutes.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "dimensions": {
+            "description": "GA4 realtime dimension API names, e.g. ['country', 'unifiedScreenName'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 realtime metric API names.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "RunRealtimeReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "run_pivot_report",
+      "description": "Run a GA4 report shaped as a pivot table: one dimension as rows, another as columns.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "row_dimension": {
+            "description": "Dimension for pivot rows, e.g. 'country'.",
+            "title": "Row Dimension",
+            "type": "string"
+          },
+          "column_dimension": {
+            "description": "Dimension for pivot columns, e.g. 'deviceCategory'.",
+            "title": "Column Dimension",
+            "type": "string"
+          },
+          "metrics": {
+            "description": "GA4 metric API names.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "row_dimension",
+          "column_dimension"
+        ],
+        "title": "RunPivotReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "batch_run_reports",
+      "description": "Run up to 5 GA4 reports (different dimension/metric combinations) in one call.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "$defs": {
+          "BatchReportSpec": {
+            "properties": {
+              "dimensions": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Dimensions",
+                "type": "array"
+              },
+              "metrics": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Metrics",
+                "type": "array"
+              }
+            },
+            "title": "BatchReportSpec",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "reports": {
+            "description": "Up to 5 dimension/metric combinations to run together.",
+            "items": {
+              "$ref": "#/$defs/BatchReportSpec"
+            },
+            "title": "Reports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reports"
+        ],
+        "title": "BatchRunReportsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "check_report_compatibility",
+      "description": "Check whether chosen GA4 dimensions and metrics can be used together before running a report.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "CheckCompatibilityParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "CompatibilityItem": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "api_name": {
+                "default": "",
+                "title": "Api Name",
+                "type": "string"
+              },
+              "compatibility": {
+                "default": "",
+                "title": "Compatibility",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "CompatibilityItem",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "dimensions": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/CompatibilityItem"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/CompatibilityItem"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "CompatibilityCheck",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_report_metadata",
+      "description": "List which GA4 dimensions and metrics a property can report on.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          }
+        },
+        "title": "ReportMetadataParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "MetadataField": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "default": "",
+                "title": "Description",
+                "type": "string"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "api_name": {
+                "default": "",
+                "title": "Api Name",
+                "type": "string"
+              },
+              "ui_name": {
+                "default": "",
+                "title": "Ui Name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "MetadataField",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "dimensions": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/MetadataField"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/MetadataField"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ReportMetadata",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_traffic_by_channel",
+      "description": "Read traffic broken down by channel (organic search, paid, direct, referral, social).",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_top_pages",
+      "description": "Read the most-visited pages for a property over a date range.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_top_referrers",
+      "description": "Read the top external sites sending traffic to a property.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_landing_pages_report",
+      "description": "Read which pages visitors land on first, with sessions and bounce rate.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_conversions_report",
+      "description": "Read GA4 key events (conversions) by event name, with counts.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_ecommerce_overview",
+      "description": "Read e-commerce headline numbers -- transactions and revenue -- if the property tracks purchases.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_geo_breakdown",
+      "description": "Read traffic broken down by country and city.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_device_breakdown",
+      "description": "Read traffic broken down by device category, operating system, and browser.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "get_campaign_performance",
+      "description": "Read traffic and conversions broken down by marketing campaign (UTM campaign).",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "RunCustomReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReportRow": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "values": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Values",
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "ReportRow",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReportRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReportRowList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "compare_periods",
+      "description": "Compare headline GA4 metrics between a period and the equivalent previous period, with the percent change.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "metrics": {
+            "description": "GA4 metric API names to compare.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "Current period start date.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "Current period end date.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "compare_start_date": {
+            "default": "14daysAgo",
+            "description": "Previous period start date.",
+            "title": "Compare Start Date",
+            "type": "string"
+          },
+          "compare_end_date": {
+            "default": "8daysAgo",
+            "description": "Previous period end date.",
+            "title": "Compare End Date",
+            "type": "string"
+          }
+        },
+        "title": "ComparePeriodsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "MetricComparison": {
+            "properties": {
+              "id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "title": "Id"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "metric": {
+                "default": "",
+                "title": "Metric",
+                "type": "string"
+              },
+              "current_value": {
+                "default": 0.0,
+                "title": "Current Value",
+                "type": "number"
+              },
+              "previous_value": {
+                "default": 0.0,
+                "title": "Previous Value",
+                "type": "number"
+              },
+              "change_pct": {
+                "default": 0.0,
+                "title": "Change Pct",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "MetricComparison",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "",
+            "title": "End Date",
+            "type": "string"
+          },
+          "compare_start_date": {
+            "default": "",
+            "title": "Compare Start Date",
+            "type": "string"
+          },
+          "compare_end_date": {
+            "default": "",
+            "title": "Compare End Date",
+            "type": "string"
+          },
+          "metrics": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/MetricComparison"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PeriodComparison",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "export_report_csv",
+      "description": "Run a GA4 custom report and return it as CSV text, ready to save or paste into a spreadsheet.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "start_date": {
+            "default": "7daysAgo",
+            "description": "GA4 start date, e.g. 7daysAgo or 2026-08-01.",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "default": "yesterday",
+            "description": "GA4 end date, e.g. yesterday or 2026-08-02.",
+            "title": "End Date",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Max rows to return (1-100).",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "dimensions": {
+            "description": "GA4 dimension API names, e.g. ['pagePath', 'country'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "GA4 metric API names, e.g. ['activeUsers', 'sessions'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Metrics",
+            "type": "array"
+          }
+        },
+        "title": "ExportReportCsvParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "row_count": {
+            "default": 0,
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "csv": {
+            "default": "",
+            "title": "Csv",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ReportCsv",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
       "background": false,
       "long_running": false,
       "scopes": [],

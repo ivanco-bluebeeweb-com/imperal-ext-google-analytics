@@ -9,10 +9,12 @@ from imperal_sdk import ActionResult
 
 import ga4_client as ga4
 from app import chat, ext
-from models import (ALERT_CONDITIONS, ALERT_METRICS, ALERT_SCHEDULES, AccountParam, AlertIdParams,
-                    CreateAlertParams, GA4Alert, GA4AlertList)
+from models import (ALERT_CONDITIONS, ALERT_METRICS, ALERT_SCHEDULES, AccountParam, AlertHistoryEntry,
+                    AlertHistoryList, AlertIdParams, CreateAlertParams, GA4Alert, GA4AlertList, TestAlertResult,
+                    UpdateAlertParams)
 
 ALERTS = "google_analytics_alerts"
+ALERT_HISTORY = "google_analytics_alert_history"
 
 _METRIC_API_NAMES = {
     "active_users": "activeUsers",
@@ -102,6 +104,98 @@ async def delete_alert_rule(ctx, params: AlertIdParams) -> ActionResult:
     return ActionResult.success(alert, summary="Alert rule deleted.", refresh_panels=["analytics"])
 
 
+@chat.function("update_alert_rule", "Change an existing GA4 alert rule's threshold, condition, or schedule without deleting it.",
+               action_type="write", effects=["alert.update"], id_projection="alert_id",
+               event="google-analytics-bluebee.alert.updated", data_model=GA4Alert)
+async def update_alert_rule(ctx, params: UpdateAlertParams) -> ActionResult:
+    """Patch one alert rule's mutable fields. Local record only."""
+    doc = await ctx.store.get(ALERTS, params.alert_id)
+    if doc is None:
+        return ActionResult.error("Alert rule not found.", retryable=False, code="GA4_ALERT_NOT_FOUND")
+    if params.condition and params.condition not in ALERT_CONDITIONS:
+        return ActionResult.error(f"Unknown condition. Choose one of: {', '.join(ALERT_CONDITIONS)}.", retryable=False,
+                                  code="GA4_ALERT_CONDITION_INVALID")
+    if params.schedule and params.schedule not in ALERT_SCHEDULES:
+        return ActionResult.error(f"Unknown schedule. Choose one of: {', '.join(ALERT_SCHEDULES)}.", retryable=False,
+                                  code="GA4_ALERT_SCHEDULE_INVALID")
+    data = dict(doc.data or {})
+    if params.threshold is not None:
+        data["threshold"] = params.threshold
+    if params.condition:
+        data["condition"] = params.condition
+    if params.schedule:
+        data["schedule"] = params.schedule
+    updated = await ctx.store.update(ALERTS, params.alert_id, data)
+    return ActionResult.success(_to_alert(updated), summary="Alert rule updated.", refresh_panels=["analytics"])
+
+
+@chat.function("pause_alert_rule", "Pause a GA4 alert rule without deleting it -- it stops evaluating until resumed.",
+               action_type="write", effects=["alert.pause"], id_projection="alert_id",
+               event="google-analytics-bluebee.alert.paused", data_model=GA4Alert)
+async def pause_alert_rule(ctx, params: AlertIdParams) -> ActionResult:
+    """Disable an alert rule without deleting it. Local record only."""
+    doc = await ctx.store.get(ALERTS, params.alert_id)
+    if doc is None:
+        return ActionResult.error("Alert rule not found.", retryable=False, code="GA4_ALERT_NOT_FOUND")
+    data = dict(doc.data or {})
+    data["enabled"] = False
+    updated = await ctx.store.update(ALERTS, params.alert_id, data)
+    return ActionResult.success(_to_alert(updated), summary="Alert rule paused.", refresh_panels=["analytics"])
+
+
+@chat.function("resume_alert_rule", "Resume a paused GA4 alert rule so it evaluates again on schedule.",
+               action_type="write", effects=["alert.resume"], id_projection="alert_id",
+               event="google-analytics-bluebee.alert.resumed", data_model=GA4Alert)
+async def resume_alert_rule(ctx, params: AlertIdParams) -> ActionResult:
+    """Re-enable a paused alert rule. Local record only."""
+    doc = await ctx.store.get(ALERTS, params.alert_id)
+    if doc is None:
+        return ActionResult.error("Alert rule not found.", retryable=False, code="GA4_ALERT_NOT_FOUND")
+    data = dict(doc.data or {})
+    data["enabled"] = True
+    updated = await ctx.store.update(ALERTS, params.alert_id, data)
+    return ActionResult.success(_to_alert(updated), summary="Alert rule resumed.", refresh_panels=["analytics"])
+
+
+@chat.function("test_alert_rule", "Evaluate a GA4 alert rule against live data right now, without waiting for its schedule.",
+               action_type="read", data_model=TestAlertResult)
+async def test_alert_rule(ctx, params: AlertIdParams) -> ActionResult:
+    """Run one alert's condition against live GA4 data right now, without waiting for its schedule."""
+    doc = await ctx.store.get(ALERTS, params.alert_id)
+    if doc is None:
+        return ActionResult.error("Alert rule not found.", retryable=False, code="GA4_ALERT_NOT_FOUND")
+    data = doc.data or {}
+    resolved = await ga4.resolve_account(ctx, str(data.get("email") or ""))
+    if not resolved.get("ok"):
+        return ActionResult.error(resolved.get("error") or "Connect a Google account first.", retryable=False,
+                                  code=resolved.get("code") or "ACCOUNT_MISSING")
+    result = await evaluate_alert(ctx, doc, resolved["account"])
+    if not result.get("ok"):
+        return ActionResult.error(result.get("error") or "Could not evaluate this alert.",
+                                  retryable=False, code=result.get("code") or "RESPONSE_UNEXPECTED")
+    out = TestAlertResult(id=params.alert_id, title=f"Test of alert {params.alert_id}", alert_id=params.alert_id,
+                          would_trigger=bool(result.get("triggered")), current_value=float(result.get("current") or 0.0),
+                          previous_value=float(result.get("previous") or 0.0), threshold=float(data.get("threshold") or 0.0))
+    return ActionResult.success(out, summary=result.get("message") or "Alert tested against live GA4 data.")
+
+
+@chat.function("list_alert_history", "List when a GA4 alert rule has triggered in the past, most recent first.",
+               action_type="read", data_model=AlertHistoryList)
+async def list_alert_history(ctx, params: AlertIdParams) -> ActionResult:
+    """List past trigger events recorded for one alert rule, most recent first."""
+    doc = await ctx.store.get(ALERTS, params.alert_id)
+    if doc is None:
+        return ActionResult.error("Alert rule not found.", retryable=False, code="GA4_ALERT_NOT_FOUND")
+    page = await ctx.store.query(ALERT_HISTORY, where={"alert_id": params.alert_id}, limit=100)
+    entries = sorted(page.data, key=lambda d: str((d.data or {}).get("triggered_at") or ""), reverse=True)
+    items = [AlertHistoryEntry(id=e.id, title=str((e.data or {}).get("triggered_at") or ""), alert_id=params.alert_id,
+                               triggered_at=str((e.data or {}).get("triggered_at") or ""),
+                               current_value=float((e.data or {}).get("current_value") or 0.0),
+                               previous_value=float((e.data or {}).get("previous_value") or 0.0)) for e in entries]
+    return ActionResult.success(AlertHistoryList(items=items, total=len(items)),
+                                summary=f"{len(items)} past trigger(s) for alert {params.alert_id}.")
+
+
 async def _metric_value(ctx, account_doc, property_id: str, metric_api_name: str, start_date: str, end_date: str):
     """Fetch one metric's value for one date range. Returns (value, error_dict_or_None)."""
     out = await ga4.report(ctx, account_doc, property_id, {
@@ -187,6 +281,10 @@ async def evaluate_alerts(ctx) -> None:
                     if result.get("ok") and result.get("triggered"):
                         updates["last_triggered_at"] = now.isoformat()
                         await user_ctx.notify(f"GA4 alert: {result['message']}")
+                        await user_ctx.store.create(ALERT_HISTORY, {
+                            "alert_id": alert_doc.id, "triggered_at": now.isoformat(),
+                            "current_value": result.get("current") or 0.0, "previous_value": result.get("previous") or 0.0,
+                        })
                     await user_ctx.store.update(ALERTS, alert_doc.id, updates)
                 except Exception as exc:  # noqa: BLE001
                     log.warning("evaluate_alerts: user %s alert %s failed: %s", user_id, alert_doc.id, exc)

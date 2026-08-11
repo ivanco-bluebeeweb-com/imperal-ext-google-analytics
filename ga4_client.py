@@ -134,6 +134,63 @@ async def report(ctx, account_doc, property_id: str, body: dict) -> dict:
     return await request(ctx, account_doc, "post", f"{DATA_API}/properties/{property_id}:runReport", json=body)
 
 
+async def batch_reports(ctx, account_doc, property_id: str, requests_body: list[dict]) -> dict:
+    """properties.batchRunReports -- several runReport requests in one call."""
+    return await request(ctx, account_doc, "post", f"{DATA_API}/properties/{property_id}:batchRunReports",
+                         json={"requests": requests_body})
+
+
+async def pivot_report(ctx, account_doc, property_id: str, body: dict) -> dict:
+    """properties.runPivotReport -- a report shaped as a pivot table."""
+    return await request(ctx, account_doc, "post", f"{DATA_API}/properties/{property_id}:runPivotReport", json=body)
+
+
+async def realtime_report(ctx, account_doc, property_id: str, body: dict) -> dict:
+    """properties.runRealtimeReport -- events from the last ~30 minutes."""
+    return await request(ctx, account_doc, "post", f"{DATA_API}/properties/{property_id}:runRealtimeReport", json=body)
+
+
+async def check_compatibility(ctx, account_doc, property_id: str, body: dict) -> dict:
+    """properties.checkCompatibility -- validate a dimension+metric combination before running it."""
+    return await request(ctx, account_doc, "post", f"{DATA_API}/properties/{property_id}:checkCompatibility", json=body)
+
+
+async def report_metadata(ctx, account_doc, property_id: str) -> dict:
+    """properties.getMetadata -- which dimensions/metrics this property can report on."""
+    return await request(ctx, account_doc, "get", f"{DATA_API}/properties/{property_id}/metadata")
+
+
+async def admin_list(ctx, account_doc, path: str, *, item_key: str, params: dict | None = None) -> dict:
+    """Generic Admin API v1beta list call, following nextPageToken until exhausted.
+
+    Every Admin API list method (customDimensions, customMetrics, keyEvents,
+    dataStreams, googleAdsLinks, accounts, accountSummaries...) shares this
+    exact pagination shape, so one helper covers all of them.
+    """
+    items: list[dict] = []
+    page_token = ""
+    base_params = dict(params or {})
+    for _ in range(20):  # hard cap: never loop forever on a misbehaving API
+        call_params = dict(base_params)
+        call_params["pageSize"] = 200
+        if page_token:
+            call_params["pageToken"] = page_token
+        out = await request(ctx, account_doc, "get", f"{ADMIN_API}/{path}", params=call_params)
+        if not out.get("ok"):
+            return out
+        body = out["data"]
+        items.extend(body.get(item_key) or [])
+        page_token = str(body.get("nextPageToken") or "")
+        if not page_token:
+            break
+    return {"ok": True, "items": items}
+
+
+async def admin_get(ctx, account_doc, path: str) -> dict:
+    """Generic Admin API v1beta single-resource GET."""
+    return await request(ctx, account_doc, "get", f"{ADMIN_API}/{path}")
+
+
 def rows(report_body: dict) -> list[dict]:
     headers = [str(h.get("name") or "") for h in report_body.get("dimensionHeaders") or []] + [
         str(h.get("name") or "") for h in report_body.get("metricHeaders") or []

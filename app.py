@@ -6,7 +6,7 @@ APP_ID = "google-analytics-bluebee"
 
 ext = Extension(
     APP_ID,
-    version="0.2.0",
+    version="0.3.0",
     display_name="Google Analytics",
     description="Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
     icon="icon.svg",
