@@ -12,6 +12,33 @@ from models import (AccountParam, GA4Overview, GA4Property, GA4PropertyList, NoP
 SELECTIONS = "google_analytics_selections"
 OVERVIEW_CACHE = "google_analytics_overview_cache"
 OVERVIEW_PERIODS = "google_analytics_overview_periods"
+OVERVIEW_LOADS = "google_analytics_overview_loads"
+
+
+async def overview_load_state(ctx, property_id: str, start_date: str, end_date: str) -> dict | None:
+    """Most recent completed load attempt for one property/date range."""
+    page = await ctx.store.query(
+        OVERVIEW_LOADS,
+        where={"property_id": property_id, "start_date": start_date, "end_date": end_date},
+        limit=1,
+    )
+    return page.data[0].data if page.data else None
+
+
+async def _persist_overview_load_state(ctx, property_id: str, start_date: str, end_date: str,
+                                       status: str, available_period: str = "") -> None:
+    page = await ctx.store.query(
+        OVERVIEW_LOADS,
+        where={"property_id": property_id, "start_date": start_date, "end_date": end_date},
+        limit=1,
+    )
+    record = {"property_id": property_id, "start_date": start_date, "end_date": end_date,
+              "status": status, "available_period": available_period,
+              "loaded_at": datetime.now(timezone.utc).isoformat()}
+    if page.data:
+        await ctx.store.update(OVERVIEW_LOADS, page.data[0].id, record)
+    else:
+        await ctx.store.create(OVERVIEW_LOADS, record)
 
 
 async def selected_overview_period(ctx, property_id: str) -> str:
@@ -137,6 +164,29 @@ _OVERVIEW_PERIODS = {
     "12months": ("365daysAgo", "yesterday"),
     "this_month": ("firstDayOfMonth", "today"),
 }
+_PERIOD_LABELS = {
+    "today": "Today", "yesterday": "Yesterday", "7days": "Last 7 days",
+    "15days": "Last 15 days", "30days": "Last 30 days", "90days": "Last 90 days",
+    "6months": "Last 6 months", "12months": "Last 12 months", "this_month": "This month",
+}
+_PERIOD_BY_DURATION = ("12months", "6months", "90days", "30days", "15days", "7days", "yesterday", "today")
+
+
+async def _longest_available_period(ctx, account_doc, property_id: str, requested_period: str) -> str:
+    """Probe shorter preset periods and return the longest one with actual GA4 rows."""
+    try:
+        candidates = _PERIOD_BY_DURATION[_PERIOD_BY_DURATION.index(requested_period) + 1:]
+    except ValueError:
+        candidates = _PERIOD_BY_DURATION
+    for candidate in candidates:
+        start_date, end_date = _OVERVIEW_PERIODS[candidate]
+        out = await ga4.report(ctx, account_doc, property_id, {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "metrics": [{"name": "activeUsers"}],
+        })
+        if out.get("ok") and ga4.rows(out["data"]):
+            return _PERIOD_LABELS[candidate]
+    return ""
 
 
 @chat.function("load_overview_period", "Load GA4 overview for a named period: today, yesterday, 7/15/30/90 days, 6/12 months, or this month.",
@@ -150,7 +200,9 @@ async def load_overview_period(ctx, params: OverviewPeriodParams) -> ActionResul
                                                     start_date=dates[0], end_date=dates[1], period=params.period))
     if result.status == "success":
         await _persist_overview_period(ctx, params.property_id, params.period)
-        result.refresh_panels = ["analytics", "analytics_nav"]
+    else:
+        await _persist_overview_load_state(ctx, params.property_id, dates[0], dates[1], "error")
+    result.refresh_panels = ["analytics", "analytics_nav"]
     return result
 
 
@@ -171,13 +223,15 @@ async def get_overview(ctx, params: OverviewParams) -> ActionResult:
     out = await ga4.report(ctx, doc, property_id, body)
     if not out.get("ok"):
         return _error(out)
-    values = (ga4.rows(out["data"]) or [{}])[0]
+    report_rows = ga4.rows(out["data"])
+    values = (report_rows or [{}])[0]
     def integer(name: str) -> int:
         try: return int(float(values.get(name) or 0))
         except (TypeError, ValueError): return 0
     def decimal(name: str) -> float:
         try: return float(values.get(name) or 0)
         except (TypeError, ValueError): return 0.0
+    has_data = bool(report_rows)
     overview = GA4Overview(id=property_id, title="GA4 overview", property_id=property_id,
                            start_date=params.start_date, end_date=params.end_date,
                            active_users=integer("activeUsers"), sessions=integer("sessions"),
@@ -196,4 +250,15 @@ async def get_overview(ctx, params: OverviewParams) -> ActionResult:
         await ctx.store.update(OVERVIEW_CACHE, existing.data[0].id, cache_record)
     else:
         await ctx.store.create(OVERVIEW_CACHE, cache_record)
-    return _success(overview, f"Loaded GA4 overview for {params.start_date} to {params.end_date}.", ["analytics"])
+    available_period = ""
+    if not has_data and params.period in _OVERVIEW_PERIODS:
+        available_period = await _longest_available_period(ctx, doc, property_id, params.period)
+    await _persist_overview_load_state(
+        ctx, property_id, params.start_date, params.end_date,
+        "data" if has_data else "no_data", available_period,
+    )
+    summary = (f"Loaded GA4 overview for {params.start_date} to {params.end_date}."
+               if has_data else
+               f"No GA4 data is available for {params.start_date} to {params.end_date}."
+               + (f" Choose {available_period}." if available_period else ""))
+    return _success(overview, summary, ["analytics"])

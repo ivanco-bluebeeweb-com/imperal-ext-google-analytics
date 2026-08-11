@@ -9,7 +9,7 @@ from imperal_sdk import ui
 
 import ga4_client as ga4
 from app import APP_ID, ext
-from handlers import cached_overview, selected_overview_period
+from handlers import cached_overview, overview_load_state, selected_overview_period
 from handlers_accounts import live_status
 from handlers_alerts import ALERT_METRICS, _METRIC_LABELS
 
@@ -150,7 +150,17 @@ async def analytics_nav(ctx, view="", **kwargs):
         ])]
     children += [ui.Divider(), ui.Button("Settings", icon="Settings", variant="secondary", full_width=True,
                                          on_click=ui.Call("__panel__analytics", view="settings", property_id=property_id))]
-    return ui.Stack(children=children, gap=2)
+    sidebar = ui.Stack(children=children, gap=2)
+    if property_id:
+        period = await selected_overview_period(ctx, property_id)
+        dates = _OVERVIEW_PERIODS.get(period, _OVERVIEW_PERIODS["30days"])
+        cached = await cached_overview(ctx, property_id, dates["start_date"], dates["end_date"])
+        completed = await overview_load_state(ctx, property_id, dates["start_date"], dates["end_date"])
+        if not cached and not completed:
+            sidebar.props["auto_action"] = ui.Call(
+                "load_overview_period", property_id=property_id, period=period,
+            )
+    return sidebar
 
 
 @ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True)
@@ -229,13 +239,20 @@ async def _overview(ctx, property_id, period="30days"):
     period = period if period in _OVERVIEW_PERIODS else "30days"
     dates = _OVERVIEW_PERIODS[period]
     cached = await cached_overview(ctx, property_id, dates["start_date"], dates["end_date"])
+    load_state = await overview_load_state(ctx, property_id, dates["start_date"], dates["end_date"])
     selector = ui.Select(
         options=[{"value": value, "label": item["label"]} for value, item in _OVERVIEW_PERIODS.items()],
         value=period, param_name="period", placeholder="Show results for",
         on_change=ui.Call("load_overview_period", property_id=property_id, period="{{value}}"),
     )
     children = [ui.Text("Show results for", variant="caption"), selector]
-    if cached:
+    if load_state and load_state.get("status") == "no_data":
+        recommendation = load_state.get("available_period") or "a shorter period"
+        children.append(ui.Alert(
+            f"No GA4 data is available for {dates['label'].lower()}. Choose {recommendation}, the longest period with available data.",
+            title="No data for this period", type="info",
+        ))
+    elif cached:
         children += [
             ui.Text(f"Updated {cached.get('loaded_at', '')} · {dates['label']}", variant="caption"),
             ui.Stats(columns=3, children=[
@@ -247,15 +264,12 @@ async def _overview(ctx, property_id, period="30days"):
             ]),
         ]
     else:
-        children += [
+        children.append(ui.Stack(children=[
             ui.Loading(f"Loading {dates['label'].lower()}…", variant="spinner"),
             ui.Text("We started fetching your GA4 data. This view will update automatically when it is ready.",
                     variant="caption"),
-        ]
-    page = ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
-    if not cached:
-        page.props["auto_action"] = ui.Call("load_overview_period", property_id=property_id, period=period)
-    return page
+        ], align="center", justify="center", gap=3))
+    return ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
 
 
 def _explore(property_id):
