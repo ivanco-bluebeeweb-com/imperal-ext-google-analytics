@@ -71,3 +71,4 @@ def test_global_select_property_persists_owning_account_and_marks_it_current(mon
     selection = asyncio.run(ga4.global_selected_property(ctx))
     assert selection == {"property_id": "222", "email": "two@example.com"}
     assert ctx.store.selections["old"].data["is_current"] is False
+    assert result.refresh_panels == ["analytics", "analytics_nav"]

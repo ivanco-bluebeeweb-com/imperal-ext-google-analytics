@@ -26,6 +26,25 @@ property settings, and data streams.
   every call is explicit.
 - A connected account must later be verified and its accessible GA4 properties loaded before reports are shown.
 
+## UI context refresh rule
+
+Any action that changes the GA4 reporting context must refresh the surface that
+can now be stale:
+
+- **Account connected, disconnected, or switched:** refresh both the sidebar and
+  the central reporting panel, because account choices and all report content may
+  have changed.
+- **Property selected:** refresh both surfaces, because the selected property is
+  the global reporting context.
+- **Period selected or report loaded:** refresh the central reporting panel; also
+  refresh the sidebar when it owns the automatic initial-load action or displays
+  related context.
+
+Every new connect/switch/select flow must be checked against this rule in code
+review and regression tests. The Overview header uses the GA4 property's display
+name and the Google-style `Property ID: <id>` label; it must never present an ID
+as if it were the site's name.
+
 ## Panel flow
 
 - With no usable Google account, both the sidebar and main area offer only **Connect Google Account**.

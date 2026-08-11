@@ -89,7 +89,10 @@ async def connect_google_analytics(ctx, params: NoParams) -> ActionResult:
         return ActionResult.error("Google OAuth is not configured. Save the client ID and client secret in the app's Secrets.",
                                   retryable=False, code="GOOGLE_OAUTH_NOT_CONFIGURED")
     url = await ctx.oauth_authorize_url("google")
-    return ActionResult.success({"authorization_url": url}, summary="Open the Google authorization link to connect Analytics.")
+    # OAuth changes account context when it completes. Request both surfaces to
+    # refresh so the completed connection is visible without stale UI state.
+    return ActionResult.success({"authorization_url": url}, summary="Open the Google authorization link to connect Analytics.",
+                                refresh_panels=["analytics", "analytics_nav"])
 
 
 @chat.function("list_properties", "List GA4 properties the connected Google account can read.",
@@ -148,6 +151,8 @@ async def select_property(ctx, params: SelectPropertyParams) -> ActionResult:
         await ctx.store.update(SELECTIONS, old.data[0].id, record)
     else:
         await ctx.store.create(SELECTIONS, record)
+    # A property selection changes the global reporting context. Refresh every
+    # surface explicitly; it must not rely solely on event subscriptions.
     return _success(PropertySelection(id=params.property_id, title=params.property_id, account=email,
                                       property_id=params.property_id), "GA4 property selected.",
                     ["analytics", "analytics_nav"])

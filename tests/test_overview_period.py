@@ -20,7 +20,7 @@ def test_overview_defaults_to_last_30_days_and_autoloads_when_uncached(monkeypat
 
     monkeypatch.setattr(panels, "cached_overview", no_cached_overview)
     monkeypatch.setattr(panels, "overview_load_state", no_load_state)
-    page = asyncio.run(panels._overview(object(), "123"))
+    page = asyncio.run(panels._overview(object(), "123", period="30days"))
     rendered = _text(page)
 
     assert "Show results for" in rendered
@@ -30,6 +30,8 @@ def test_overview_defaults_to_last_30_days_and_autoloads_when_uncached(monkeypat
     assert "We started fetching your GA4 data" in rendered
     assert "load_overview_period" in str(rendered)
     assert "__panel__analytics" not in str(rendered)
+    assert "Overview · 123" in rendered
+    assert "Property ID: 123" in rendered
     assert "auto_action" not in page.props
     # Startup loading is initiated by the stable sidebar, so refreshing the
     # center panel cannot cancel its own request.
@@ -45,13 +47,30 @@ def test_overview_period_selector_offers_requested_ranges(monkeypatch):
 
     monkeypatch.setattr(panels, "cached_overview", cached)
     monkeypatch.setattr(panels, "overview_load_state", no_load_state)
-    page = asyncio.run(panels._overview(object(), "123", "12months"))
+    page = asyncio.run(panels._overview(object(), "123", period="12months"))
     rendered = _text(page)
 
     for label in ("Today", "Yesterday", "Last 7 days", "Last 15 days", "Last 30 days",
                   "Last 90 days", "Last 6 months", "Last 12 months", "This month"):
         assert label in rendered
     assert "Updated 2026-08-11T12:00:00Z · Last 12 months" in rendered
+
+
+def test_overview_header_uses_property_name_and_google_style_property_id(monkeypatch):
+    async def cached(ctx, property_id, start_date, end_date):
+        return {"loaded_at": "2026-08-11T12:00:00Z", "active_users": 1, "sessions": 1,
+                "views": 1, "conversions": 0, "total_revenue": 0.0}
+
+    async def no_load_state(ctx, property_id, start_date, end_date):
+        return None
+
+    monkeypatch.setattr(panels, "cached_overview", cached)
+    monkeypatch.setattr(panels, "overview_load_state", no_load_state)
+    page = asyncio.run(panels._overview(object(), "123456789", "Example Shop", "30days"))
+    rendered = _text(page)
+
+    assert "Overview · Example Shop" in rendered
+    assert "Property ID: 123456789" in rendered
 
 
 def test_completed_empty_period_shows_recommended_available_period(monkeypatch):
@@ -63,7 +82,7 @@ def test_completed_empty_period_shows_recommended_available_period(monkeypatch):
 
     monkeypatch.setattr(panels, "cached_overview", no_cached_overview)
     monkeypatch.setattr(panels, "overview_load_state", empty_load_state)
-    page = asyncio.run(panels._overview(object(), "123", "12months"))
+    page = asyncio.run(panels._overview(object(), "123", period="12months"))
     rendered = _text(page)
 
     assert "No data for this period" in rendered

@@ -91,6 +91,16 @@ async def _property_options(ctx, account):
     ]
 
 
+async def _property_title(ctx, account, property_id: str) -> str:
+    """Resolve the GA4 display name for an already-selected property."""
+    if not account or not property_id:
+        return property_id
+    for option in await _property_options(ctx, account):
+        if option["value"] == property_id:
+            return option["label"]
+    return property_id
+
+
 def _account_options(accounts):
     return [
         {"value": str((doc.data or {}).get("email") or ""),
@@ -197,7 +207,8 @@ async def analytics(ctx, view="overview", property_id="", report="channels", per
         ])
     if view == "overview":
         period = period or await selected_overview_period(ctx, property_id)
-        return await _overview(ctx, property_id, period)
+        property_title = await _property_title(ctx, active, property_id)
+        return await _overview(ctx, property_id, property_title, period)
     if view == "explore":
         return _explore(property_id)
     if view == "realtime":
@@ -238,7 +249,7 @@ _OVERVIEW_PERIODS = {
 }
 
 
-async def _overview(ctx, property_id, period="30days"):
+async def _overview(ctx, property_id, property_title="", period="30days"):
     period = period if period in _OVERVIEW_PERIODS else "30days"
     dates = _OVERVIEW_PERIODS[period]
     cached = await cached_overview(ctx, property_id, dates["start_date"], dates["end_date"])
@@ -272,7 +283,8 @@ async def _overview(ctx, property_id, period="30days"):
             ui.Text("We started fetching your GA4 data. This view will update automatically when it is ready.",
                     variant="caption"),
         ], align="center", justify="center", gap=3))
-    return ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
+    return ui.Page(title=f"Overview · {property_title or property_id}",
+                   subtitle=f"Property ID: {property_id}", children=children)
 
 
 def _explore(property_id):
