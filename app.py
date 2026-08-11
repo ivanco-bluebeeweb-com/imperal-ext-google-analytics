@@ -6,22 +6,37 @@ APP_ID = "google-analytics-bluebee"
 
 ext = Extension(
     APP_ID,
-    version="0.3.0",
+    version="0.4.0",
     display_name="Google Analytics",
-    description="Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
+    description="Google Analytics 4 reporting plus optional property editing: properties, overview metrics, "
+                "traffic, page performance, and -- once you reconnect with edit access -- custom "
+                "dimensions/metrics, key events, Google Ads links, and data streams.",
     icon="icon.svg",
-    capabilities=["google-analytics:read", "google-analytics:settings", "notify:push"],
+    capabilities=["google-analytics:read", "google-analytics:write", "google-analytics:settings", "notify:push"],
     actions_explicit=True,
 )
 
 chat = ChatExtension(
     ext,
     tool_name="google_analytics",
-    description="Read Google Analytics 4 properties and reports without changing Google Analytics settings or data.",
+    description="Read Google Analytics 4 properties and reports, and -- for accounts connected with edit access -- "
+                "manage custom dimensions/metrics, key events, Google Ads links, property settings, and data streams.",
 )
 
-# The connection is deliberately read-only. Identity scopes prevent a connection
-# record without a usable account label from being treated as ready.
+# Parts A/B/C only ever read. Part D (handlers_admin_write.py) writes to the
+# user's actual GA4 property, so it needs analytics.edit on top of
+# analytics.readonly. Google treats analytics.edit as a sensitive (not
+# restricted) scope: no annual security assessment, but OAuth apps serving
+# more than the ~100-user testing cap must pass Google's verification review
+# (a form plus a short screen recording of the scope in use) before every
+# user can grant it. Accounts that connected before this scope existed only
+# hold analytics.readonly and MUST reconnect (disconnect_google_account then
+# connect_google_analytics again) to accept the new consent screen -- no
+# code change here can grant a scope retroactively to an old token. Even
+# with the scope granted, Google Analytics still enforces its own property
+# role: the account also needs Editor or Administrator on that GA4 property
+# (set inside Google Analytics itself, not here) or Part D calls get
+# PERMISSION_DENIED regardless of OAuth scope.
 #
 # gmail.readonly was tried as a workaround for the platform's OAuth callback
 # resolving account email via a Gmail-specific getProfile call for the
@@ -41,6 +56,7 @@ ext.oauth(
         "email",
         "profile",
         "https://www.googleapis.com/auth/analytics.readonly",
+        "https://www.googleapis.com/auth/analytics.edit",
     ],
 )
 

@@ -191,6 +191,37 @@ async def admin_get(ctx, account_doc, path: str) -> dict:
     return await request(ctx, account_doc, "get", f"{ADMIN_API}/{path}")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Write helpers (Part D). Every one of these can create, change, or remove
+# something in the user's actual Google Analytics property. They all go
+# through the same `request()` used above -- same token, same error mapping
+# -- so a missing analytics.edit scope or an Editor-less GA4 role surfaces as
+# the ordinary TOKEN_REJECTED / PERMISSION_DENIED codes callers already
+# handle, not a new failure mode.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def admin_create(ctx, account_doc, path: str, body: dict, *, query: dict | None = None) -> dict:
+    """Generic Admin API v1beta create call (POST .../parent/collection)."""
+    return await request(ctx, account_doc, "post", f"{ADMIN_API}/{path}", params=query, json=body)
+
+
+async def admin_patch(ctx, account_doc, path: str, body: dict, *, update_mask: str = "") -> dict:
+    """Generic Admin API v1beta patch call. Google's PATCH needs updateMask as a query param."""
+    params = {"updateMask": update_mask} if update_mask else None
+    return await request(ctx, account_doc, "patch", f"{ADMIN_API}/{path}", params=params, json=body)
+
+
+async def admin_delete(ctx, account_doc, path: str) -> dict:
+    """Generic Admin API v1beta delete call."""
+    return await request(ctx, account_doc, "delete", f"{ADMIN_API}/{path}")
+
+
+async def admin_action(ctx, account_doc, path: str, body: dict | None = None) -> dict:
+    """Generic Admin API v1beta custom-verb call, e.g. .../customDimensions/x:archive."""
+    return await request(ctx, account_doc, "post", f"{ADMIN_API}/{path}", json=body or {})
+
+
 def rows(report_body: dict) -> list[dict]:
     headers = [str(h.get("name") or "") for h in report_body.get("dimensionHeaders") or []] + [
         str(h.get("name") or "") for h in report_body.get("metricHeaders") or []

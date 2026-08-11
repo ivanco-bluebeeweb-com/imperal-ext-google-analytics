@@ -361,3 +361,93 @@ class GA4Alert(sdl.Entity):
 
 class GA4AlertList(sdl.EntityList[GA4Alert]):
     pass
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Part D -- write/edit extensions (Admin API v1beta, requires analytics.edit
+# scope AND an Editor/Administrator GA4 role on the property). Every
+# function here changes something real in the user's Google Analytics
+# property. Nothing here is scheduled or run without an explicit call.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+CUSTOM_DIMENSION_SCOPES = ("EVENT", "USER")
+CUSTOM_METRIC_SCOPES = ("EVENT",)
+CUSTOM_METRIC_UNITS = ("STANDARD", "CURRENCY", "FEET", "METERS", "KILOMETERS", "MILES", "MILLISECONDS",
+                       "SECONDS", "MINUTES", "HOURS")
+KEY_EVENT_COUNTING_METHODS = ("ONCE_PER_EVENT", "ONCE_PER_SESSION")
+DATA_STREAM_TYPES = ("WEB_DATA_STREAM", "ANDROID_APP_DATA_STREAM", "IOS_APP_DATA_STREAM")
+
+
+class CreateCustomDimensionParams(PropertyDetailParams):
+    parameter_name: str = Field(..., description="The event/user parameter name this dimension tracks, e.g. 'plan_tier'. Cannot be changed after creation.")
+    display_name: str = Field(..., description="Human-readable name shown in GA4 reports.")
+    scope: str = Field("EVENT", description="EVENT or USER. Cannot be changed after creation.")
+    description: str = Field("", description="Optional description shown in the GA4 UI.")
+
+
+class ArchiveCustomDimensionParams(PropertyDetailParams):
+    parameter_name: str = Field(..., description="parameter_name of the custom dimension to archive, from list_custom_dimensions.")
+
+
+class CreateCustomMetricParams(PropertyDetailParams):
+    parameter_name: str = Field(..., description="The event parameter name this metric tracks, e.g. 'cart_value'. Cannot be changed after creation.")
+    display_name: str = Field(..., description="Human-readable name shown in GA4 reports.")
+    measurement_unit: str = Field("STANDARD", description="STANDARD, CURRENCY, FEET, METERS, SECONDS, etc.")
+    scope: str = Field("EVENT", description="Only EVENT is currently supported by GA4 for custom metrics.")
+    description: str = Field("", description="Optional description shown in the GA4 UI.")
+
+
+class ArchiveCustomMetricParams(PropertyDetailParams):
+    parameter_name: str = Field(..., description="parameter_name of the custom metric to archive, from list_custom_metrics.")
+
+
+class CreateKeyEventParams(PropertyDetailParams):
+    event_name: str = Field(..., description="Exact GA4 event name to mark as a key event (conversion), e.g. 'purchase'.")
+    counting_method: str = Field("ONCE_PER_EVENT", description="ONCE_PER_EVENT (every occurrence counts) or ONCE_PER_SESSION.")
+
+
+class UpdateKeyEventParams(PropertyDetailParams):
+    event_name: str = Field(..., description="Event name of the existing key event to update, from list_key_events.")
+    counting_method: str = Field(..., description="ONCE_PER_EVENT or ONCE_PER_SESSION.")
+
+
+class DeleteKeyEventParams(PropertyDetailParams):
+    event_name: str = Field(..., description="Event name of the key event to unmark, from list_key_events. The underlying GA4 event itself is untouched -- only its conversion status is removed.")
+
+
+class CreateGoogleAdsLinkParams(PropertyDetailParams):
+    customer_id: str = Field(..., description="Google Ads customer ID to link, e.g. '1234567890' (no dashes).")
+    can_manage_clients: bool = Field(False, description="Whether this link can manage Google Ads manager-account clients.")
+    ads_personalization_enabled: bool = Field(True, description="Whether GA4 data can be used for Google Ads personalization.")
+
+
+class UpdateGoogleAdsLinkParams(PropertyDetailParams):
+    link_id: str = Field(..., description="Google Ads link id, from list_google_ads_links.")
+    ads_personalization_enabled: bool | None = Field(None, description="New value; omit to leave unchanged.")
+
+
+class DeleteGoogleAdsLinkParams(PropertyDetailParams):
+    link_id: str = Field(..., description="Google Ads link id, from list_google_ads_links.")
+
+
+class UpdatePropertyDetailsParams(PropertyDetailParams):
+    display_name: str = Field("", description="New property display name; omit to leave unchanged.")
+    time_zone: str = Field("", description="New IANA timezone, e.g. 'America/Los_Angeles'; omit to leave unchanged.")
+    currency_code: str = Field("", description="New ISO currency code, e.g. 'USD'; omit to leave unchanged.")
+    industry_category: str = Field("", description="New GA4 industry category enum value; omit to leave unchanged.")
+
+
+class CreateDataStreamParams(PropertyDetailParams):
+    display_name: str = Field(..., description="Name for the new data stream.")
+    default_uri: str = Field(..., description="The site's root URL, e.g. 'https://example.com'. Required for WEB_DATA_STREAM.")
+    stream_type: str = Field("WEB_DATA_STREAM", description="WEB_DATA_STREAM, ANDROID_APP_DATA_STREAM, or IOS_APP_DATA_STREAM. Cannot be changed after creation.")
+
+
+class UpdateDataStreamParams(DataStreamDetailParams):
+    display_name: str = Field("", description="New display name; omit to leave unchanged.")
+    default_uri: str = Field("", description="New root URL (web streams only); omit to leave unchanged.")
+
+
+class DeleteDataStreamParams(DataStreamDetailParams):
+    pass
