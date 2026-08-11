@@ -444,6 +444,11 @@ class CreateDataStreamParams(PropertyDetailParams):
     stream_type: str = Field("WEB_DATA_STREAM", description="WEB_DATA_STREAM, ANDROID_APP_DATA_STREAM, or IOS_APP_DATA_STREAM. Cannot be changed after creation.")
 
 
+class WriteConfirmation(sdl.Entity):
+    """Generic confirmation entity for destructive Part D calls that remove something from GA4."""
+    detail: str = ""
+
+
 class UpdateDataStreamParams(DataStreamDetailParams):
     display_name: str = Field("", description="New display name; omit to leave unchanged.")
     default_uri: str = Field("", description="New root URL (web streams only); omit to leave unchanged.")

@@ -2,14 +2,15 @@
   "manifest_schema_version": 3,
   "sdk_version": "5.9.13",
   "app_id": "google-analytics-bluebee",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "name": "Google Analytics",
-  "description": "Read-only Google Analytics 4 reporting: properties, overview metrics, traffic and page performance.",
+  "description": "Google Analytics 4 reporting plus optional property editing: properties, overview metrics, traffic, page performance, and -- once you reconnect with edit access -- custom dimensions/metrics, key events, Google Ads links, and data streams.",
   "icon": "icon.svg",
   "actions_explicit": true,
   "system": false,
   "capabilities": [
     "google-analytics:read",
+    "google-analytics:write",
     "google-analytics:settings",
     "notify:push"
   ],
@@ -3041,6 +3042,1996 @@
         "x-sdl": "entity-list"
       },
       "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "create_custom_dimension",
+      "description": "Register a new custom dimension on a GA4 property so an event/user parameter shows up in reports. Requires the connected account to have Editor access on the property.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:custom_dimension"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "parameter_name": {
+            "description": "The event/user parameter name this dimension tracks, e.g. 'plan_tier'. Cannot be changed after creation.",
+            "title": "Parameter Name",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Human-readable name shown in GA4 reports.",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "scope": {
+            "default": "EVENT",
+            "description": "EVENT or USER. Cannot be changed after creation.",
+            "title": "Scope",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "description": "Optional description shown in the GA4 UI.",
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter_name",
+          "display_name"
+        ],
+        "title": "CreateCustomDimensionParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "parameter_name": {
+            "default": "",
+            "title": "Parameter Name",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "scope": {
+            "default": "",
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "CustomDimensionEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.create_custom_dimension",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "archive_custom_dimension",
+      "description": "Archive a custom dimension on a GA4 property. Archiving is permanent -- GA4 does not support un-archiving, and the parameter_name cannot be reused for 1 week after archiving.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:custom_dimension"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "parameter_name": {
+            "description": "parameter_name of the custom dimension to archive, from list_custom_dimensions.",
+            "title": "Parameter Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter_name"
+        ],
+        "title": "ArchiveCustomDimensionParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "description": "Generic confirmation entity for destructive Part D calls that remove something from GA4.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "WriteConfirmation",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.archive_custom_dimension",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "create_custom_metric",
+      "description": "Register a new custom metric on a GA4 property so an event parameter is tracked as a number. Requires the connected account to have Editor access on the property.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:custom_metric"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "parameter_name": {
+            "description": "The event parameter name this metric tracks, e.g. 'cart_value'. Cannot be changed after creation.",
+            "title": "Parameter Name",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Human-readable name shown in GA4 reports.",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "measurement_unit": {
+            "default": "STANDARD",
+            "description": "STANDARD, CURRENCY, FEET, METERS, SECONDS, etc.",
+            "title": "Measurement Unit",
+            "type": "string"
+          },
+          "scope": {
+            "default": "EVENT",
+            "description": "Only EVENT is currently supported by GA4 for custom metrics.",
+            "title": "Scope",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "description": "Optional description shown in the GA4 UI.",
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter_name",
+          "display_name"
+        ],
+        "title": "CreateCustomMetricParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "parameter_name": {
+            "default": "",
+            "title": "Parameter Name",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "measurement_unit": {
+            "default": "",
+            "title": "Measurement Unit",
+            "type": "string"
+          },
+          "scope": {
+            "default": "",
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "CustomMetricEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.create_custom_metric",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "archive_custom_metric",
+      "description": "Archive a custom metric on a GA4 property. Archiving is permanent -- GA4 does not support un-archiving.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:custom_metric"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "parameter_name": {
+            "description": "parameter_name of the custom metric to archive, from list_custom_metrics.",
+            "title": "Parameter Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter_name"
+        ],
+        "title": "ArchiveCustomMetricParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "description": "Generic confirmation entity for destructive Part D calls that remove something from GA4.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "WriteConfirmation",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.archive_custom_metric",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "create_key_event",
+      "description": "Mark an existing GA4 event as a key event (conversion). The event must already be firing on the property; this only flags it as a conversion, it does not create the event itself.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:key_event"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "event_name": {
+            "description": "Exact GA4 event name to mark as a key event (conversion), e.g. 'purchase'.",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "counting_method": {
+            "default": "ONCE_PER_EVENT",
+            "description": "ONCE_PER_EVENT (every occurrence counts) or ONCE_PER_SESSION.",
+            "title": "Counting Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_name"
+        ],
+        "title": "CreateKeyEventParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "event_name": {
+            "default": "",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "custom": {
+            "default": false,
+            "title": "Custom",
+            "type": "boolean"
+          },
+          "counting_method": {
+            "default": "",
+            "title": "Counting Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "KeyEventEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.create_key_event",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "update_key_event",
+      "description": "Change the counting method of an existing GA4 key event.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "update:key_event"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "event_name": {
+            "description": "Event name of the existing key event to update, from list_key_events.",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "counting_method": {
+            "description": "ONCE_PER_EVENT or ONCE_PER_SESSION.",
+            "title": "Counting Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_name",
+          "counting_method"
+        ],
+        "title": "UpdateKeyEventParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "event_name": {
+            "default": "",
+            "title": "Event Name",
+            "type": "string"
+          },
+          "custom": {
+            "default": false,
+            "title": "Custom",
+            "type": "boolean"
+          },
+          "counting_method": {
+            "default": "",
+            "title": "Counting Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "KeyEventEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.update_key_event",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "delete_key_event",
+      "description": "Unmark a GA4 event as a key event (conversion). The underlying event keeps firing normally -- only its conversion status is removed.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:key_event"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "event_name": {
+            "description": "Event name of the key event to unmark, from list_key_events. The underlying GA4 event itself is untouched -- only its conversion status is removed.",
+            "title": "Event Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_name"
+        ],
+        "title": "DeleteKeyEventParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "description": "Generic confirmation entity for destructive Part D calls that remove something from GA4.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "WriteConfirmation",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.delete_key_event",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "create_google_ads_link",
+      "description": "Link a Google Ads account to a GA4 property, so conversions and audiences can flow between them.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:google_ads_link"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "customer_id": {
+            "description": "Google Ads customer ID to link, e.g. '1234567890' (no dashes).",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "can_manage_clients": {
+            "default": false,
+            "description": "Whether this link can manage Google Ads manager-account clients.",
+            "title": "Can Manage Clients",
+            "type": "boolean"
+          },
+          "ads_personalization_enabled": {
+            "default": true,
+            "description": "Whether GA4 data can be used for Google Ads personalization.",
+            "title": "Ads Personalization Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "customer_id"
+        ],
+        "title": "CreateGoogleAdsLinkParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "customer_id": {
+            "default": "",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "can_manage_clients": {
+            "default": false,
+            "title": "Can Manage Clients",
+            "type": "boolean"
+          },
+          "ads_personalization_enabled": {
+            "default": false,
+            "title": "Ads Personalization Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GoogleAdsLinkEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.create_google_ads_link",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "update_google_ads_link",
+      "description": "Change the personalization setting of an existing Google Ads link.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "update:google_ads_link"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "link_id": {
+            "description": "Google Ads link id, from list_google_ads_links.",
+            "title": "Link Id",
+            "type": "string"
+          },
+          "ads_personalization_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New value; omit to leave unchanged.",
+            "title": "Ads Personalization Enabled"
+          }
+        },
+        "required": [
+          "link_id"
+        ],
+        "title": "UpdateGoogleAdsLinkParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "customer_id": {
+            "default": "",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "can_manage_clients": {
+            "default": false,
+            "title": "Can Manage Clients",
+            "type": "boolean"
+          },
+          "ads_personalization_enabled": {
+            "default": false,
+            "title": "Ads Personalization Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "GoogleAdsLinkEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.update_google_ads_link",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "delete_google_ads_link",
+      "description": "Remove a Google Ads link from a GA4 property.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:google_ads_link"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "link_id": {
+            "description": "Google Ads link id, from list_google_ads_links.",
+            "title": "Link Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "link_id"
+        ],
+        "title": "DeleteGoogleAdsLinkParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "description": "Generic confirmation entity for destructive Part D calls that remove something from GA4.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "WriteConfirmation",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.delete_google_ads_link",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "update_property_details",
+      "description": "Change a GA4 property's own settings: display name, timezone, currency, or industry category. Only given fields change.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "update:property"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "description": "New property display name; omit to leave unchanged.",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "time_zone": {
+            "default": "",
+            "description": "New IANA timezone, e.g. 'America/Los_Angeles'; omit to leave unchanged.",
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "currency_code": {
+            "default": "",
+            "description": "New ISO currency code, e.g. 'USD'; omit to leave unchanged.",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "industry_category": {
+            "default": "",
+            "description": "New GA4 industry category enum value; omit to leave unchanged.",
+            "title": "Industry Category",
+            "type": "string"
+          }
+        },
+        "title": "UpdatePropertyDetailsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "property_id": {
+            "default": "",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "time_zone": {
+            "default": "",
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "currency_code": {
+            "default": "",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "industry_category": {
+            "default": "",
+            "title": "Industry Category",
+            "type": "string"
+          },
+          "create_time": {
+            "default": "",
+            "title": "Create Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PropertyDetail",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.update_property_details",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "create_data_stream",
+      "description": "Create a new web/Android/iOS data stream on a GA4 property.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:data_stream"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Name for the new data stream.",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "default_uri": {
+            "description": "The site's root URL, e.g. 'https://example.com'. Required for WEB_DATA_STREAM.",
+            "title": "Default Uri",
+            "type": "string"
+          },
+          "stream_type": {
+            "default": "WEB_DATA_STREAM",
+            "description": "WEB_DATA_STREAM, ANDROID_APP_DATA_STREAM, or IOS_APP_DATA_STREAM. Cannot be changed after creation.",
+            "title": "Stream Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "display_name",
+          "default_uri"
+        ],
+        "title": "CreateDataStreamParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "stream_id": {
+            "default": "",
+            "title": "Stream Id",
+            "type": "string"
+          },
+          "stream_type": {
+            "default": "",
+            "title": "Stream Type",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "measurement_id": {
+            "default": "",
+            "title": "Measurement Id",
+            "type": "string"
+          },
+          "default_uri": {
+            "default": "",
+            "title": "Default Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "DataStreamEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.create_data_stream",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "update_data_stream",
+      "description": "Rename a data stream or change its default URL (web streams only).",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "update:data_stream"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "stream_id": {
+            "description": "Data stream ID from list_data_streams.",
+            "title": "Stream Id",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "description": "New display name; omit to leave unchanged.",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "default_uri": {
+            "default": "",
+            "description": "New root URL (web streams only); omit to leave unchanged.",
+            "title": "Default Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stream_id"
+        ],
+        "title": "UpdateDataStreamParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "stream_id": {
+            "default": "",
+            "title": "Stream Id",
+            "type": "string"
+          },
+          "stream_type": {
+            "default": "",
+            "title": "Stream Type",
+            "type": "string"
+          },
+          "display_name": {
+            "default": "",
+            "title": "Display Name",
+            "type": "string"
+          },
+          "measurement_id": {
+            "default": "",
+            "title": "Measurement Id",
+            "type": "string"
+          },
+          "default_uri": {
+            "default": "",
+            "title": "Default Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "DataStreamEntity",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.update_data_stream",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "google_analytics"
+    },
+    {
+      "name": "delete_data_stream",
+      "description": "Permanently delete a data stream from a GA4 property. This stops data collection through it and cannot be undone.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:data_stream"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "account": {
+            "default": "",
+            "description": "Connected Google account email; omit when only one is connected.",
+            "title": "Account",
+            "type": "string"
+          },
+          "property_id": {
+            "default": "",
+            "description": "GA4 property ID; omit to use the selected property.",
+            "title": "Property Id",
+            "type": "string"
+          },
+          "stream_id": {
+            "description": "Data stream ID from list_data_streams.",
+            "title": "Stream Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stream_id"
+        ],
+        "title": "DeleteDataStreamParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "description": "Generic confirmation entity for destructive Part D calls that remove something from GA4.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "WriteConfirmation",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "google-analytics-bluebee.delete_data_stream",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -7827,7 +9818,8 @@
         "openid",
         "email",
         "profile",
-        "https://www.googleapis.com/auth/analytics.readonly"
+        "https://www.googleapis.com/auth/analytics.readonly",
+        "https://www.googleapis.com/auth/analytics.edit"
       ],
       "has_hook": false
     }

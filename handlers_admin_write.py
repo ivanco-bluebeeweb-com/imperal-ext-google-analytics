@@ -31,14 +31,16 @@ from models import (ArchiveCustomDimensionParams, ArchiveCustomMetricParams, Cre
                     CreateKeyEventParams, CustomDimensionEntity, CustomMetricEntity, DataStreamEntity,
                     DeleteDataStreamParams, DeleteGoogleAdsLinkParams, DeleteKeyEventParams, GoogleAdsLinkEntity,
                     KeyEventEntity, PropertyDetail, UpdateDataStreamParams, UpdateGoogleAdsLinkParams,
-                    UpdateKeyEventParams, UpdatePropertyDetailsParams)
+                    UpdateKeyEventParams, UpdatePropertyDetailsParams, WriteConfirmation)
 
 
 @chat.function("create_custom_dimension",
                "Register a new custom dimension on a GA4 property so an event/user parameter shows up in reports. "
                "Requires the connected account to have Editor access on the property.",
-               action_type="write", data_model=CustomDimensionEntity)
+               action_type="write", data_model=CustomDimensionEntity,
+               event="google-analytics-bluebee.create_custom_dimension", effects=["create:custom_dimension"])
 async def create_custom_dimension(ctx, params: CreateCustomDimensionParams) -> ActionResult:
+    """Create a GA4 custom dimension via the Admin API and return the created record."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -57,23 +59,28 @@ async def create_custom_dimension(ctx, params: CreateCustomDimensionParams) -> A
 @chat.function("archive_custom_dimension",
                "Archive a custom dimension on a GA4 property. Archiving is permanent -- GA4 does not support "
                "un-archiving, and the parameter_name cannot be reused for 1 week after archiving.",
-               action_type="destructive")
+               action_type="destructive", data_model=WriteConfirmation,
+               event="google-analytics-bluebee.archive_custom_dimension", effects=["delete:custom_dimension"])
 async def archive_custom_dimension(ctx, params: ArchiveCustomDimensionParams) -> ActionResult:
+    """Archive (irreversibly) a GA4 custom dimension by its parameter_name."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
     out = await ga4.admin_action(ctx, doc, f"properties/{pid}/customDimensions/{params.parameter_name}:archive")
     if not out.get("ok"):
         return _error(out)
-    return ActionResult.success({"parameter_name": params.parameter_name},
+    return ActionResult.success(WriteConfirmation(id=params.parameter_name, title=params.parameter_name,
+                                                  detail=f"Archived custom dimension '{params.parameter_name}'."),
                                 summary=f"Archived custom dimension '{params.parameter_name}' on property {pid}.")
 
 
 @chat.function("create_custom_metric",
                "Register a new custom metric on a GA4 property so an event parameter is tracked as a number. "
                "Requires the connected account to have Editor access on the property.",
-               action_type="write", data_model=CustomMetricEntity)
+               action_type="write", data_model=CustomMetricEntity,
+               event="google-analytics-bluebee.create_custom_metric", effects=["create:custom_metric"])
 async def create_custom_metric(ctx, params: CreateCustomMetricParams) -> ActionResult:
+    """Create a GA4 custom metric via the Admin API and return the created record."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -93,23 +100,28 @@ async def create_custom_metric(ctx, params: CreateCustomMetricParams) -> ActionR
 @chat.function("archive_custom_metric",
                "Archive a custom metric on a GA4 property. Archiving is permanent -- GA4 does not support "
                "un-archiving.",
-               action_type="destructive")
+               action_type="destructive", data_model=WriteConfirmation,
+               event="google-analytics-bluebee.archive_custom_metric", effects=["delete:custom_metric"])
 async def archive_custom_metric(ctx, params: ArchiveCustomMetricParams) -> ActionResult:
+    """Archive (irreversibly) a GA4 custom metric by its parameter_name."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
     out = await ga4.admin_action(ctx, doc, f"properties/{pid}/customMetrics/{params.parameter_name}:archive")
     if not out.get("ok"):
         return _error(out)
-    return ActionResult.success({"parameter_name": params.parameter_name},
+    return ActionResult.success(WriteConfirmation(id=params.parameter_name, title=params.parameter_name,
+                                                  detail=f"Archived custom metric '{params.parameter_name}'."),
                                 summary=f"Archived custom metric '{params.parameter_name}' on property {pid}.")
 
 
 @chat.function("create_key_event",
                "Mark an existing GA4 event as a key event (conversion). The event must already be firing on "
                "the property; this only flags it as a conversion, it does not create the event itself.",
-               action_type="write", data_model=KeyEventEntity)
+               action_type="write", data_model=KeyEventEntity,
+               event="google-analytics-bluebee.create_key_event", effects=["create:key_event"])
 async def create_key_event(ctx, params: CreateKeyEventParams) -> ActionResult:
+    """Mark a GA4 event as a key event (conversion) via the Admin API."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -124,8 +136,10 @@ async def create_key_event(ctx, params: CreateKeyEventParams) -> ActionResult:
 
 
 @chat.function("update_key_event", "Change the counting method of an existing GA4 key event.",
-               action_type="write", data_model=KeyEventEntity)
+               action_type="write", data_model=KeyEventEntity,
+               event="google-analytics-bluebee.update_key_event", effects=["update:key_event"])
 async def update_key_event(ctx, params: UpdateKeyEventParams) -> ActionResult:
+    """Patch the counting_method of an existing GA4 key event."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -143,22 +157,27 @@ async def update_key_event(ctx, params: UpdateKeyEventParams) -> ActionResult:
 @chat.function("delete_key_event",
                "Unmark a GA4 event as a key event (conversion). The underlying event keeps firing normally -- "
                "only its conversion status is removed.",
-               action_type="destructive")
+               action_type="destructive", data_model=WriteConfirmation,
+               event="google-analytics-bluebee.delete_key_event", effects=["delete:key_event"])
 async def delete_key_event(ctx, params: DeleteKeyEventParams) -> ActionResult:
+    """Remove the key-event (conversion) flag from a GA4 event; the event itself keeps firing."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
     out = await ga4.admin_delete(ctx, doc, f"properties/{pid}/keyEvents/{params.event_name}")
     if not out.get("ok"):
         return _error(out)
-    return ActionResult.success({"event_name": params.event_name},
+    return ActionResult.success(WriteConfirmation(id=params.event_name, title=params.event_name,
+                                                  detail=f"'{params.event_name}' is no longer a key event."),
                                 summary=f"'{params.event_name}' is no longer a key event on property {pid}.")
 
 
 @chat.function("create_google_ads_link",
                "Link a Google Ads account to a GA4 property, so conversions and audiences can flow between them.",
-               action_type="write", data_model=GoogleAdsLinkEntity)
+               action_type="write", data_model=GoogleAdsLinkEntity,
+               event="google-analytics-bluebee.create_google_ads_link", effects=["create:google_ads_link"])
 async def create_google_ads_link(ctx, params: CreateGoogleAdsLinkParams) -> ActionResult:
+    """Create a Google Ads link on a GA4 property via the Admin API."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -175,8 +194,10 @@ async def create_google_ads_link(ctx, params: CreateGoogleAdsLinkParams) -> Acti
 
 
 @chat.function("update_google_ads_link", "Change the personalization setting of an existing Google Ads link.",
-               action_type="write", data_model=GoogleAdsLinkEntity)
+               action_type="write", data_model=GoogleAdsLinkEntity,
+               event="google-analytics-bluebee.update_google_ads_link", effects=["update:google_ads_link"])
 async def update_google_ads_link(ctx, params: UpdateGoogleAdsLinkParams) -> ActionResult:
+    """Patch the ads_personalization_enabled flag on an existing Google Ads link."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -195,23 +216,28 @@ async def update_google_ads_link(ctx, params: UpdateGoogleAdsLinkParams) -> Acti
 
 
 @chat.function("delete_google_ads_link", "Remove a Google Ads link from a GA4 property.",
-               action_type="destructive")
+               action_type="destructive", data_model=WriteConfirmation,
+               event="google-analytics-bluebee.delete_google_ads_link", effects=["delete:google_ads_link"])
 async def delete_google_ads_link(ctx, params: DeleteGoogleAdsLinkParams) -> ActionResult:
+    """Remove an existing Google Ads link from a GA4 property."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
     out = await ga4.admin_delete(ctx, doc, f"properties/{pid}/googleAdsLinks/{params.link_id}")
     if not out.get("ok"):
         return _error(out)
-    return ActionResult.success({"link_id": params.link_id},
+    return ActionResult.success(WriteConfirmation(id=params.link_id, title=params.link_id,
+                                                  detail=f"Removed Google Ads link {params.link_id}."),
                                 summary=f"Removed Google Ads link {params.link_id} from property {pid}.")
 
 
 @chat.function("update_property_details",
                "Change a GA4 property's own settings: display name, timezone, currency, or industry category. "
                "Only given fields change.",
-               action_type="write", data_model=PropertyDetail)
+               action_type="write", data_model=PropertyDetail,
+               event="google-analytics-bluebee.update_property_details", effects=["update:property"])
 async def update_property_details(ctx, params: UpdatePropertyDetailsParams) -> ActionResult:
+    """Patch a GA4 property's display name, timezone, currency and/or industry category."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -242,8 +268,10 @@ async def update_property_details(ctx, params: UpdatePropertyDetailsParams) -> A
 
 
 @chat.function("create_data_stream", "Create a new web/Android/iOS data stream on a GA4 property.",
-               action_type="write", data_model=DataStreamEntity)
+               action_type="write", data_model=DataStreamEntity,
+               event="google-analytics-bluebee.create_data_stream", effects=["create:data_stream"])
 async def create_data_stream(ctx, params: CreateDataStreamParams) -> ActionResult:
+    """Create a new GA4 data stream (web, Android, or iOS) via the Admin API."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -263,8 +291,10 @@ async def create_data_stream(ctx, params: CreateDataStreamParams) -> ActionResul
 
 
 @chat.function("update_data_stream", "Rename a data stream or change its default URL (web streams only).",
-               action_type="write", data_model=DataStreamEntity)
+               action_type="write", data_model=DataStreamEntity,
+               event="google-analytics-bluebee.update_data_stream", effects=["update:data_stream"])
 async def update_data_stream(ctx, params: UpdateDataStreamParams) -> ActionResult:
+    """Patch a GA4 data stream's display_name and/or default_uri (web streams only)."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
@@ -292,13 +322,16 @@ async def update_data_stream(ctx, params: UpdateDataStreamParams) -> ActionResul
 @chat.function("delete_data_stream",
                "Permanently delete a data stream from a GA4 property. This stops data collection through it "
                "and cannot be undone.",
-               action_type="destructive")
+               action_type="destructive", data_model=WriteConfirmation,
+               event="google-analytics-bluebee.delete_data_stream", effects=["delete:data_stream"])
 async def delete_data_stream(ctx, params: DeleteDataStreamParams) -> ActionResult:
+    """Permanently delete a GA4 data stream; stops data collection through it."""
     doc, pid, err = await _resolve_property(ctx, params.account, params.property_id)
     if err:
         return _error(err)
     out = await ga4.admin_delete(ctx, doc, f"properties/{pid}/dataStreams/{params.stream_id}")
     if not out.get("ok"):
         return _error(out)
-    return ActionResult.success({"stream_id": params.stream_id},
+    return ActionResult.success(WriteConfirmation(id=params.stream_id, title=params.stream_id,
+                                                  detail=f"Deleted data stream {params.stream_id}."),
                                 summary=f"Deleted data stream {params.stream_id} from property {pid}.")
