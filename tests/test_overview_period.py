@@ -22,6 +22,10 @@ def test_overview_defaults_to_last_30_days_and_autoloads_when_uncached(monkeypat
     assert "Show results for" in rendered
     assert "Last 30 days" in rendered
     assert "Load last 7 days" not in rendered
+    assert "Loading last 30 days" in rendered
+    assert "We started fetching your GA4 data" in rendered
+    assert "load_overview_period" in str(rendered)
+    assert "__panel__analytics" not in str(rendered)
     assert "auto_action" in page.props
     auto_action = str(page.props["auto_action"])
     assert "load_overview_period" in auto_action

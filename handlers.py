@@ -11,6 +11,22 @@ from models import (AccountParam, GA4Overview, GA4Property, GA4PropertyList, NoP
 
 SELECTIONS = "google_analytics_selections"
 OVERVIEW_CACHE = "google_analytics_overview_cache"
+OVERVIEW_PERIODS = "google_analytics_overview_periods"
+
+
+async def selected_overview_period(ctx, property_id: str) -> str:
+    """Return the last requested named period for a property, defaulting to 30 days."""
+    page = await ctx.store.query(OVERVIEW_PERIODS, where={"property_id": property_id}, limit=1)
+    return str((page.data[0].data or {}).get("period") or "30days") if page.data else "30days"
+
+
+async def _persist_overview_period(ctx, property_id: str, period: str) -> None:
+    page = await ctx.store.query(OVERVIEW_PERIODS, where={"property_id": property_id}, limit=1)
+    record = {"property_id": property_id, "period": period}
+    if page.data:
+        await ctx.store.update(OVERVIEW_PERIODS, page.data[0].id, record)
+    else:
+        await ctx.store.create(OVERVIEW_PERIODS, record)
 
 
 def _error(out: dict) -> ActionResult:
@@ -130,8 +146,12 @@ async def load_overview_period(ctx, params: OverviewPeriodParams) -> ActionResul
     dates = _OVERVIEW_PERIODS.get(params.period)
     if not dates:
         return ActionResult.error("Choose a supported reporting period.", retryable=False, code="VALIDATION_FAILED")
-    return await get_overview(ctx, OverviewParams(account=params.account, property_id=params.property_id,
-                                                  start_date=dates[0], end_date=dates[1], period=params.period))
+    result = await get_overview(ctx, OverviewParams(account=params.account, property_id=params.property_id,
+                                                    start_date=dates[0], end_date=dates[1], period=params.period))
+    if result.status == "success":
+        await _persist_overview_period(ctx, params.property_id, params.period)
+        result.refresh_panels = ["analytics", "analytics_nav"]
+    return result
 
 
 @chat.function("get_overview", "Read headline GA4 metrics for a selected property and date range.",

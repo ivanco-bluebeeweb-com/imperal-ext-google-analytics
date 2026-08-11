@@ -9,7 +9,7 @@ from imperal_sdk import ui
 
 import ga4_client as ga4
 from app import APP_ID, ext
-from handlers import cached_overview
+from handlers import cached_overview, selected_overview_period
 from handlers_accounts import live_status
 from handlers_alerts import ALERT_METRICS, _METRIC_LABELS
 
@@ -154,7 +154,7 @@ async def analytics_nav(ctx, view="", **kwargs):
 
 
 @ext.panel("analytics", slot="center", title="Google Analytics", icon="ChartNoAxesCombined", center_overlay=True)
-async def analytics(ctx, view="overview", property_id="", report="channels", period="30days", **kwargs):
+async def analytics(ctx, view="overview", property_id="", report="channels", period="", **kwargs):
     accounts = await _accounts(ctx)
     if view == "connect":
         return await _connect(ctx)
@@ -183,6 +183,7 @@ async def analytics(ctx, view="overview", property_id="", report="channels", per
     if not property_id:
         return ui.Page(title="Google Analytics", children=[ui.Empty("Select a GA4 property in the sidebar to load reporting.")])
     if view == "overview":
+        period = period or await selected_overview_period(ctx, property_id)
         return await _overview(ctx, property_id, period)
     if view == "explore":
         return _explore(property_id)
@@ -231,7 +232,7 @@ async def _overview(ctx, property_id, period="30days"):
     selector = ui.Select(
         options=[{"value": value, "label": item["label"]} for value, item in _OVERVIEW_PERIODS.items()],
         value=period, param_name="period", placeholder="Show results for",
-        on_change=ui.Call("__panel__analytics", view="overview", property_id=property_id, period="{{value}}"),
+        on_change=ui.Call("load_overview_period", property_id=property_id, period="{{value}}"),
     )
     children = [ui.Text("Show results for", variant="caption"), selector]
     if cached:
@@ -246,7 +247,11 @@ async def _overview(ctx, property_id, period="30days"):
             ]),
         ]
     else:
-        children.append(ui.Empty(f"Loading {dates['label'].lower()}…"))
+        children += [
+            ui.Loading(f"Loading {dates['label'].lower()}…", variant="spinner"),
+            ui.Text("We started fetching your GA4 data. This view will update automatically when it is ready.",
+                    variant="caption"),
+        ]
     page = ui.Page(title="Overview", subtitle=f"Property {property_id}", children=children)
     if not cached:
         page.props["auto_action"] = ui.Call("load_overview_period", property_id=property_id, period=period)
