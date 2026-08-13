@@ -55,9 +55,56 @@ def test_connected_account_without_property_explains_left_panel_selection(monkey
     async def no_selection(ctx):
         return {}
 
+    async def fake_properties(ctx, doc):
+        return {"ok": True, "properties": []}
+
     monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection)
+    monkeypatch.setattr(panels.ga4, "properties", fake_properties)
     node = asyncio.run(panels.analytics(_Ctx([_doc("account-1", email="owner@example.com", is_active=True)])))
     assert "Choose the GA4 property to display in the left panel." in _text(node)
+
+
+def test_broken_connection_shows_reconnect_not_a_blank_property_message(monkeypatch):
+    """A dead/rejected token must never look like 'this account simply has no
+    properties' -- that reads as lost data. It must show a Reconnect action."""
+    async def no_selection(ctx):
+        return {}
+
+    async def rejected(ctx, doc):
+        return {"ok": False, "code": "TOKEN_REJECTED"}
+
+    async def fake_authorize_url(provider, **kwargs):
+        return "https://accounts.google.com/authorize?mock=1"
+
+    monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection)
+    monkeypatch.setattr(panels.ga4, "properties", rejected)
+    ctx = _Ctx([_doc("account-1", email="owner@example.com", is_active=True)])
+    ctx.oauth_authorize_url = fake_authorize_url
+    node = asyncio.run(panels.analytics(ctx))
+    rendered = _text(node)
+    assert "Choose the GA4 property to display in the left panel." not in rendered
+    assert "Reconnect this account" in rendered
+    assert "Google rejected this connection" in rendered
+
+
+def test_broken_connection_marked_in_sidebar_account_selector(monkeypatch):
+    async def no_selection(ctx):
+        return {}
+
+    async def rejected(ctx, doc):
+        return {"ok": False, "code": "TOKEN_REJECTED"}
+
+    async def fake_authorize_url(provider, **kwargs):
+        return "https://accounts.google.com/authorize?mock=1"
+
+    monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection)
+    monkeypatch.setattr(panels.ga4, "properties", rejected)
+    ctx = _Ctx([_doc("account-1", email="owner@example.com", is_active=True)])
+    ctx.oauth_authorize_url = fake_authorize_url
+    node = asyncio.run(panels.analytics_nav(ctx))
+    rendered = _text(node)
+    assert "owner@example.com \u26a0 Reconnect needed" in rendered
+    assert "Reconnect this account" in rendered
 
 
 def test_center_refreshes_when_an_account_connects():
@@ -69,7 +116,11 @@ def test_center_ignores_stale_property_parameter_after_account_switch(monkeypatc
     async def no_selection_for_new_active_account(ctx):
         return {"property_id": "111", "email": "one@example.com"}
 
+    async def fake_properties(ctx, doc):
+        return {"ok": True, "properties": []}
+
     monkeypatch.setattr(panels.ga4, "global_selected_property", no_selection_for_new_active_account)
+    monkeypatch.setattr(panels.ga4, "properties", fake_properties)
     node = asyncio.run(panels.analytics(
         _Ctx([_doc("account-2", email="two@example.com", is_active=True)]),
         property_id="111",

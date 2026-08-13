@@ -21,6 +21,11 @@ _STATUS_COLOR = {"connected": "green", "reconnect_required": "red",
                  "insufficient_access": "yellow", "error": "red"}
 _STATUS_LABEL = {"connected": "Connected", "reconnect_required": "Reconnect needed",
                  "insufficient_access": "Insufficient access", "error": "Error"}
+# A broken OAuth connection (dead/rejected token) is a different situation from
+# an account that genuinely has no reachable GA4 properties: the former needs a
+# Reconnect action, the latter does not. Never collapse these into one blank
+# "no properties" message -- that reads as lost data when nothing was lost.
+_BROKEN_CONNECTION_STATUSES = {"reconnect_required", "error"}
 
 _REPORTS = {
     "channels": ("Traffic by channel", "get_traffic_by_channel"),
@@ -91,6 +96,33 @@ async def _property_options(ctx, account):
     ]
 
 
+def _status_from_properties_result(out: dict) -> str:
+    """Same status classification as handlers_accounts.live_status(), but
+    from an ALREADY-FETCHED ga4.properties() result -- so the sidebar makes
+    exactly one live call for the active account instead of two (one for
+    status, one for the property list)."""
+    if not out.get("ok"):
+        code = out.get("code") or ""
+        if code == "TOKEN_REJECTED":
+            return "reconnect_required"
+        return "insufficient_access" if code == "PERMISSION_DENIED" else "error"
+    return "connected" if out.get("properties") else "insufficient_access"
+
+
+async def _active_status_and_options(ctx, account):
+    """One live ga4.properties() call for the active account, yielding both
+    its connection status and its property Select options."""
+    if not account:
+        return "", []
+    out = await ga4.properties(ctx, account)
+    status = _status_from_properties_result(out)
+    options = [
+        {"value": row["property_id"], "label": str(row.get("title") or row["property_id"])}
+        for row in out.get("properties") or []
+    ] if out.get("ok") else []
+    return status, options
+
+
 async def _property_title(ctx, account, property_id: str) -> str:
     """Resolve the GA4 display name for an already-selected property."""
     if not account or not property_id:
@@ -101,11 +133,46 @@ async def _property_title(ctx, account, property_id: str) -> str:
     return property_id
 
 
-def _account_options(accounts):
+def _account_options(accounts, active_email: str = "", active_status: str = ""):
+    """Account picker options. Only the ACTIVE account's already-known live
+    status is shown in its label (e.g. 'owner@x.com \u26a0 Reconnect needed') --
+    this never triggers an extra live Google call per account just to render
+    the dropdown; the sidebar already queries GA4 for the active account only
+    (see test_sidebar_property_selector_queries_only_the_active_account).
+    Other accounts' status is checked on demand in Settings."""
+    options = []
+    for doc in accounts:
+        email = str((doc.data or {}).get("email") or "")
+        label = email
+        if email.lower() == (active_email or "").lower() and active_status and active_status != "connected":
+            label = f"{email} \u26a0 {_STATUS_LABEL.get(active_status, active_status)}"
+        options.append({"value": email, "label": label})
+    return options
+
+
+async def _reconnect_children(ctx, active_email: str, status: str):
+    """The Alert + Reconnect button shown instead of a property picker when
+    the active account's OWN connection is broken (dead/rejected token) --
+    not when it simply has no properties. Mirrors the proven Google Drive
+    Connector reconnect pattern (login_hint keeps Google's picker on the
+    right account)."""
+    try:
+        url = await ctx.oauth_authorize_url("google", login_hint=active_email or None)
+    except Exception:
+        url = ""
+    reconnect_btn = (
+        ui.Button("Reconnect this account", icon="RefreshCw", variant="primary", full_width=True, on_click=ui.Open(url))
+        if url else
+        ui.Button("Open connection setup", icon="Settings", full_width=True,
+                  on_click=ui.Call("__panel__analytics", view="connect"))
+    )
     return [
-        {"value": str((doc.data or {}).get("email") or ""),
-         "label": str((doc.data or {}).get("email") or "")}
-        for doc in accounts
+        ui.Alert(
+            "Google rejected this connection, so its GA4 properties can't be listed right now. "
+            "Nothing was deleted -- reconnect to see them again.",
+            title="Connection needs attention", type="warning",
+        ),
+        reconnect_btn,
     ]
 
 
@@ -123,10 +190,12 @@ async def analytics_nav(ctx, view="", **kwargs):
     # A property only remains selected when it belongs to the active account.
     property_id = selection.get("property_id", "") if selection.get("email", "").lower() == active_email.lower() else ""
 
+    active_status_str, active_options = await _active_status_and_options(ctx, active)
+
     children = [
         ui.Text("Google account", variant="caption"),
         ui.Select(
-            options=_account_options(accounts), value=active_email,
+            options=_account_options(accounts, active_email, active_status_str), value=active_email,
             placeholder="Select a connected Google account", param_name="account",
             on_change=ui.Call("switch_account", account="{{value}}"),
         ),
@@ -135,15 +204,23 @@ async def analytics_nav(ctx, view="", **kwargs):
         ui.Divider(),
         ui.Text("GA4 property", variant="caption"),
     ]
-    options = await _property_options(ctx, active) if active else []
-    if options:
-        children.append(ui.Select(
-            options=options, value=property_id, placeholder="Select a GA4 property",
-            param_name="property_id",
-            on_change=ui.Call("select_property", account=active_email, property_id="{{value}}"),
-        ))
+    if active_status_str in _BROKEN_CONNECTION_STATUSES:
+        children += await _reconnect_children(ctx, active_email, active_status_str)
+        options = []
     else:
-        children.append(ui.Text("No accessible GA4 properties found for this account.", variant="caption"))
+        options = active_options
+        if options:
+            children.append(ui.Select(
+                options=options, value=property_id, placeholder="Select a GA4 property",
+                param_name="property_id",
+                on_change=ui.Call("select_property", account=active_email, property_id="{{value}}"),
+            ))
+        elif active_status_str == "insufficient_access":
+            children.append(ui.Text(
+                "This Google account has no GA4 property it can access. Grant it access in GA4 Admin, "
+                "or switch to another connected account.", variant="caption"))
+        else:
+            children.append(ui.Text("No accessible GA4 properties found for this account.", variant="caption"))
 
     if property_id:
         menu = [
@@ -197,6 +274,10 @@ async def analytics(ctx, view="overview", property_id="", report="channels", per
     if view == "settings":
         return await _settings(ctx)
     if not property_id:
+        active_status = await live_status(ctx, active) if active else None
+        if active_status and active_status.status in _BROKEN_CONNECTION_STATUSES:
+            return ui.Page(title="Google Analytics",
+                           children=await _reconnect_children(ctx, active_email, active_status.status))
         return ui.Page(title="Google Analytics", children=[
             ui.Empty("Choose the GA4 property to display in the left panel.")
         ])
