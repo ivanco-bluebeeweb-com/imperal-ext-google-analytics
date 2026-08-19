@@ -302,3 +302,94 @@ def test_happy_debug_purge_unresolved_accounts_removes_only_emailless_rows():
     assert "good1" not in removed_ids
     assert "broken1" in removed_ids
     assert "broken2" in removed_ids
+
+
+# ── Part D2 (SCENARIO_TESTING_STANDARD.md): idempotency / double-invocation ─
+
+def test_d2_double_delete_alert_rule_fails_clean_on_the_second_call(monkeypatch):
+    """delete_alert_rule checks store.get before deleting -- a retried
+    delete on an alert already removed by the first call must return a
+    clean not-found error, never crash or silently double-report success."""
+    _patch_alert_resolve(monkeypatch)
+    ctx = _alert_ctx()
+    created = asyncio.run(ha.create_alert_rule(ctx, CreateAlertParams(
+        account="", property_id="123456", metric="sessions", condition="decrease_pct",
+        threshold=20.0, schedule="daily")))
+    alert_id = created.data.id
+
+    first = asyncio.run(ha.delete_alert_rule(ctx, AlertIdParams(alert_id=alert_id)))
+    assert first.error is None
+
+    second = asyncio.run(ha.delete_alert_rule(ctx, AlertIdParams(alert_id=alert_id)))
+    assert second.error is not None
+    assert second.error_code == "GA4_ALERT_NOT_FOUND"
+
+
+def test_d2_double_disconnect_google_account_fails_clean_on_the_second_call(monkeypatch):
+    """disconnect_google_account resolves the account via resolve_account
+    before deleting -- once disconnected, a second disconnect attempt on
+    the same account must fail clean (account no longer resolvable), not
+    attempt a second delete against a doc that's already gone."""
+    class _Store:
+        def __init__(self, docs):
+            self.docs = {d.id: d for d in docs}
+
+        async def query(self, collection, where=None, limit=100):
+            docs = list(self.docs.values())
+            if where:
+                docs = [d for d in docs if all((d.data or {}).get(k) == v for k, v in where.items())]
+            return SimpleNamespace(data=docs[:limit])
+
+        async def delete(self, collection, doc_id):
+            self.docs.pop(doc_id, None)
+
+    doc = _account_doc()
+    store = _Store([doc])
+    ctx = SimpleNamespace(store=store)
+
+    first = asyncio.run(hacc.disconnect_google_account(ctx, AccountAction(account="user@example.com")))
+    assert first.error is None
+
+    second = asyncio.run(hacc.disconnect_google_account(ctx, AccountAction(account="user@example.com")))
+    assert second.error is not None
+
+
+def test_d2_double_debug_purge_unresolved_accounts_is_naturally_idempotent():
+    """Calling the purge twice in a row: the second call finds zero
+    emailless rows left (the first call already removed them all) and
+    must return a clean empty result, not error."""
+    class _Store:
+        def __init__(self):
+            self.docs = [
+                SimpleNamespace(id="broken1", data={"email": "", "provider": "google"}),
+            ]
+
+        async def query(self, collection, limit=100):
+            return SimpleNamespace(data=self.docs)
+
+        async def delete(self, collection, doc_id):
+            self.docs = [d for d in self.docs if d.id != doc_id]
+
+    ctx = SimpleNamespace(store=_Store())
+    first = asyncio.run(hacc.debug_purge_unresolved_accounts(ctx, AccountAction(account="")))
+    assert first.error is None
+    assert len(first.data.items) == 1
+
+    second = asyncio.run(hacc.debug_purge_unresolved_accounts(ctx, AccountAction(account="")))
+    assert second.error is None
+    assert len(second.data.items) == 0
+
+
+# ── Part D3 (SCENARIO_TESTING_STANDARD.md): security / SSRF surface -------
+
+def test_d3_no_ssrf_all_google_calls_target_fixed_api_hosts():
+    """No chat function in this app accepts a user-supplied URL -- every
+    outbound call in ga4_client.py's request() builds its path against one
+    of two hard-coded constants (ADMIN_API/DATA_API, both
+    *.googleapis.com), never a caller-controlled host. This is the
+    regression trip-wire: if a future function ever accepts a raw `url`
+    param and threads it into request(), this assertion on the constants
+    should be revisited alongside adding a real SSRF-shaped test."""
+    import ga4_client
+    assert ga4_client.ADMIN_API.startswith("https://analyticsadmin.googleapis.com/")
+    assert ga4_client.DATA_API.startswith("https://analyticsdata.googleapis.com/")
