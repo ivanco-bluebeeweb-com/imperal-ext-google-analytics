@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 ADMIN_API = "https://analyticsadmin.googleapis.com/v1beta"
 DATA_API = "https://analyticsdata.googleapis.com/v1beta"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -130,10 +132,77 @@ async def account_for_property(ctx, property_id: str):
     return None
 
 
-async def request(ctx, account_doc, method: str, url: str, *, params: dict | None = None, json: dict | None = None) -> dict:
-    token = str((account_doc.data or {}).get("access_token") or "")
-    if not token:
+async def refresh_access_token(ctx, account_doc) -> dict:
+    """Refresh one saved OAuth account's access token without exposing credentials.
+
+    Mirrors Google Drive/YouTube Studio's refresh_access_token: exchanges the
+    stored refresh_token for a new access_token, persists it, and updates the
+    in-memory doc so the caller's very next request already carries it.
+    """
+    data = account_doc.data or {}
+    refresh_token = str(data.get("refresh_token") or "")
+    if not refresh_token:
         return fail("TOKEN_REJECTED")
+    try:
+        client_id = await ctx.secrets.get("google_client_id")
+        client_secret = await ctx.secrets.get("google_client_secret")
+    except Exception:
+        return fail("UNREACHABLE", "Could not read Google OAuth configuration.")
+    if not client_id or not client_secret:
+        return fail("TOKEN_REJECTED", "Google OAuth is not configured for this app.")
+    try:
+        resp = await ctx.http.post(
+            TOKEN_URL,
+            data={"client_id": client_id, "client_secret": client_secret,
+                  "refresh_token": refresh_token, "grant_type": "refresh_token"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"}, timeout=30,
+        )
+    except Exception as exc:
+        return fail("UNREACHABLE", str(exc))
+    body = _body(resp)
+    if resp.status_code >= 400:
+        message = ""
+        if isinstance(body, dict):
+            message = str(body.get("error_description") or body.get("error") or "")
+        return fail("TOKEN_REJECTED", message)
+    if not isinstance(body, dict) or not body.get("access_token"):
+        return fail("RESPONSE_UNEXPECTED")
+    access_token = str(body["access_token"])
+    expires_at = time.time() + int(body.get("expires_in") or 3600)
+    updated = {"access_token": access_token, "expires_at": expires_at}
+    account_doc.data = {**data, **updated}
+    try:
+        await ctx.store.update(ACCOUNTS_COLLECTION, account_doc.id, updated)
+    except Exception:
+        return fail("UNREACHABLE", "The refreshed Google connection could not be saved.")
+    return {"ok": True, "access_token": access_token}
+
+
+def _token_expired(expires_at) -> bool:
+    """True only when expires_at is a real timestamp already in the past (with a
+    60s safety margin). Missing expires_at (older stored accounts) is treated as
+    not expired -- unchanged legacy behaviour, just no proactive refresh for them."""
+    if not expires_at:
+        return False
+    try:
+        return float(expires_at) <= time.time() + 60
+    except (TypeError, ValueError):
+        return False
+
+
+async def request(ctx, account_doc, method: str, url: str, *, params: dict | None = None, json: dict | None = None,
+                   retry_auth: bool = True) -> dict:
+    """Call Google Analytics once; if there's no usable token yet, it's expired by the
+    clock, or it was rejected, refresh exactly once via the account's refresh_token and
+    retry -- never more than one retry, so a truly revoked grant is reported as
+    TOKEN_REJECTED, not looped on."""
+    data = account_doc.data or {}
+    token = str(data.get("access_token") or "")
+    if not token or _token_expired(data.get("expires_at")):
+        refreshed = await refresh_access_token(ctx, account_doc)
+        if not refreshed.get("ok"):
+            return refreshed
+        token = refreshed["access_token"]
     kwargs = {"headers": {"Authorization": f"Bearer {token}", "Accept": "application/json"}, "timeout": 30}
     if params:
         kwargs["params"] = params
@@ -141,8 +210,13 @@ async def request(ctx, account_doc, method: str, url: str, *, params: dict | Non
         kwargs["json"] = json
     try:
         response = await getattr(ctx.http, method.lower())(url, **kwargs)
-    except Exception:
-        return fail("UNREACHABLE")
+    except Exception as exc:
+        return fail("UNREACHABLE", str(exc))
+    if response.status_code == 401 and retry_auth:
+        refreshed = await refresh_access_token(ctx, account_doc)
+        if not refreshed.get("ok"):
+            return refreshed
+        return await request(ctx, account_doc, method, url, params=params, json=json, retry_auth=False)
     body = _body(response)
     if response.status_code >= 400:
         return _error(response.status_code, body)
